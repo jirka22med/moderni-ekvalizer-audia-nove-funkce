@@ -2928,19 +2928,22 @@ setInterval(() => { if(window.updateStarfleetDashboard) window.updateStarfleetDa
 /* THE MAIN AUTHOR ACCORDING TO ARTICLE PARAGRAPHS §5 OF THE COPYRIGHT ACT IS ADMIRAL CLAUDE.AI FROM NOW ON, THE PERSON WHO IS THE HL PROGRAMMER OF THE ENTIRE PROJECT AND OTHER PROJECTS */ 
 
 // 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - PLNÁ VERZE
-// 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - S ANDROID FALLBACK
+// 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - ANDROID COMPATIBLE
 let pipWindow = null;
+let pipVideo = null;
+let pipCanvas = null;
+let pipAnimationFrame = null;
 
 document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () => {
     // Zavření pokud už existuje
-    if (pipWindow) {
-        if (pipWindow.close) pipWindow.close();
-        pipWindow = null;
+    if (pipVideo || pipWindow) {
+        closePiPWindow();
         return;
     }
 
-    // 🔍 DETEKCE PODPORY DOCUMENT PiP API + POKROČILÁ DIAGNOSTIKA
-    const supportsPiP = 'documentPictureInPicture' in window;
+    // 🔍 DETEKCE PODPORY + POKROČILÁ DIAGNOSTIKA
+    const supportsPiP = 'pictureInPictureEnabled' in document; // ✅ Starší, kompatibilnější API
+    const supportsDocPiP = 'documentPictureInPicture' in window; // ✅ Novější API
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // 🔬 DETEKCE CHROME VERZE
@@ -2951,70 +2954,37 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
 
     // 📊 DIAGNOSTICKÝ REPORT
     console.log('🛰️ USS PROMETHEUS - PiP DIAGNOSTIKA:');
-    console.log('├─ supportsPiP:', supportsPiP);
+    console.log('├─ pictureInPictureEnabled:', supportsPiP);
+    console.log('├─ documentPictureInPicture:', supportsDocPiP);
     console.log('├─ isMobile:', isMobile);
     console.log('├─ Chrome verze:', chromeVer || 'Nedetekováno');
     console.log('├─ Platform:', isAndroid ? 'Android' : isIOS ? 'iOS' : 'Desktop');
     console.log('└─ UserAgent:', navigator.userAgent);
 
-    // ⚠️ POKUD NENÍ PODPORA API - ZKONTROLUJ VERZI A NABÍDNI ŘEŠENÍ
-    if (!supportsPiP) {
+    // ⚠️ KONTROLA PODPORY
+    if (!supportsPiP && !supportsDocPiP) {
         let deviceInfo = '';
         let updateInfo = '';
         
         if (isAndroid) {
             deviceInfo = '📱 Android detekován\n\n';
-            if (chromeVer > 0 && chromeVer < 120) {
+            if (chromeVer > 0 && chromeVer < 90) {
                 updateInfo = `Aktuální verze: Chrome ${chromeVer}\n` +
-                            '⚠️ Pro PiP potřebuješ Chrome 120+\n\n' +
+                            '⚠️ Pro PiP potřebuješ Chrome 90+\n\n' +
                             '📥 Aktualizuj na:\n' +
-                            '• Stabilní: 144.0.7559.90 (leden 2026)\n' +
-                            '• Beta: 145.0.7632.19\n' +
-                            '• Dev: 146.0.7634.0\n\n';
-            } else if (chromeVer >= 120 && chromeVer < 144) {
-                updateInfo = `Aktuální verze: Chrome ${chromeVer}\n` +
-                            '✅ PiP by mělo fungovat, ale zkus aktualizovat:\n' +
                             '• Stabilní: 144.0.7559.90 (leden 2026)\n\n';
             } else if (chromeVer >= 144) {
-                updateInfo = `✅ Máš aktuální Chrome ${chromeVer}\n` +
-                            '⚠️ PiP API není detekováno - možná experimentální flag?\n' +
-                            'Zkus: chrome://flags/#document-picture-in-picture-api\n\n';
+                updateInfo = `✅ Máš Chrome ${chromeVer}\n` +
+                            '⚠️ PiP není detekováno - zkontroluj nastavení\n\n';
             } else {
-                updateInfo = '🔍 Chrome verze nedetekována\n' +
-                            'Zkus Chrome 144+ (stabilní, leden 2026)\n\n';
+                updateInfo = 'Zkus Chrome 144+ (stabilní, leden 2026)\n\n';
             }
         } else if (isIOS) {
             deviceInfo = '📱 iOS detekován\n\n';
-            if (chromeVer > 0 && chromeVer < 144) {
-                updateInfo = `Aktuální verze: Chrome ${chromeVer}\n` +
-                            '⚠️ Pro PiP zkus aktualizovat:\n' +
-                            '• Stabilní: 144.0.7559.85 (leden 2026)\n\n' +
-                            '⚠️ Poznámka: Safari iOS PiP API nepodporuje.\n\n';
-            } else if (chromeVer >= 144) {
-                updateInfo = `✅ Máš Chrome ${chromeVer}\n` +
-                            '⚠️ PiP API není detekováno\n' +
-                            '(iOS může mít omezení systému)\n\n';
-            } else {
-                updateInfo = '🔍 Chrome verze nedetekována\n' +
-                            'Zkus Chrome 144.0.7559.85 (iOS)\n\n';
-            }
+            updateInfo = '⚠️ Safari iOS PiP je omezené.\nZkus Chrome nebo otevři v Safari.\n\n';
         } else {
             deviceInfo = '💻 Desktop detekován\n\n';
-            if (chromeVer > 0 && chromeVer < 116) {
-                updateInfo = `Aktuální verze: Chrome ${chromeVer}\n` +
-                            '⚠️ Pro PiP potřebuješ Chrome 116+\n' +
-                            'Aktualizuj na Chrome 144+ (leden 2026)\n\n';
-            } else if (chromeVer >= 116 && chromeVer < 144) {
-                updateInfo = `Aktuální verze: Chrome ${chromeVer}\n` +
-                            '✅ PiP by mělo fungovat\n' +
-                            'Zkus aktualizovat na Chrome 144+\n\n';
-            } else if (chromeVer >= 144) {
-                updateInfo = `✅ Máš Chrome ${chromeVer}\n` +
-                            '⚠️ PiP API není detekováno - zkontroluj flags\n\n';
-            } else {
-                updateInfo = '🔍 Chrome/Edge verze nedetekována\n' +
-                            'Zkus Chrome 144+ nebo Edge 116+\n\n';
-            }
+            updateInfo = 'Zkus Chrome 90+ nebo Edge 79+\n\n';
         }
         
         const useFallback = confirm(
@@ -3022,269 +2992,39 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             deviceInfo +
             updateInfo +
             'Chceš otevřít klasické popup okno místo toho?\n\n' +
-            '✅ ANO = Popup okno (nebude plovoucí)\n' +
+            '✅ ANO = Popup okno\n' +
             '❌ NE = Zrušit'
         );
         
         if (!useFallback) return;
-        
-        // FALLBACK: Klasické popup okno
         openFallbackPopup();
         return;
     }
 
-    // ✅ API PODPOROVÁNO - INFO DO KONZOLE
-    if (chromeVer >= 144) {
-        console.log('🚀 USS PROMETHEUS: Chrome ' + chromeVer + ' detekován - PiP READY!');
-    } else if (chromeVer >= 120) {
-        console.log('✅ USS PROMETHEUS: Chrome ' + chromeVer + ' - PiP podporováno (zvažte update na 144+)');
-    } else if (chromeVer >= 116) {
-        console.log('✅ USS PROMETHEUS: Chrome ' + chromeVer + ' - PiP podporováno (Desktop)');
-    }
-
-    // ✅ POKUS O OTEVŘENÍ SKUTEČNÉHO PiP OKNA
+    // ✅ POKUS O OTEVŘENÍ PiP (CANVAS → VIDEO STREAM metoda)
     try {
-        pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 720,
-            height: 600
-        });
-
-        // HTML OBSAH PiP OKNA
-        pipWindow.document.write(`
-            <html><head>
-            <title>🛸 USS PROMETHEUS - FULL PiP</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body { 
-                    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); 
-                    color: #4ecdc4; 
-                    font-family: 'Consolas', 'Courier New', monospace; 
-                    font-size: 11px;
-                    padding: 12px;
-                    overflow-y: auto;
-                    overflow-x: hidden;
-                    user-select: none;
-                    height: 100vh;
-                }
-                
-                #pip-header {
-                    background: linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,107,107,0.1));
-                    border: 2px solid #ff6b6b;
-                    border-radius: 6px;
-                    padding: 10px;
-                    margin-bottom: 12px;
-                    text-align: center;
-                    font-weight: bold;
-                    color: #ff6b6b;
-                    text-transform: uppercase;
-                    font-size: 12px;
-                    letter-spacing: 2px;
-                    box-shadow: 0 0 15px rgba(255,107,107,0.3);
-                }
-
-                .pip-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1.2fr;
-                    gap: 12px;
-                }
-
-                .pip-section {
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid #333;
-                    border-radius: 6px;
-                    padding: 10px;
-                    margin-bottom: 10px;
-                    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-                }
-
-                .pip-section-title {
-                    color: #ff9f43;
-                    font-size: 11px;
-                    font-weight: bold;
-                    margin-bottom: 8px;
-                    padding-bottom: 4px;
-                    border-bottom: 1px solid #222;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                }
-
-                table { 
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    font-family: 'Courier New', monospace; 
-                    font-size: 10px; 
-                }
-                td { 
-                    border-bottom: 1px solid #1a1a1a; 
-                    padding: 4px 6px; 
-                }
-                td:first-child { 
-                    color: #888; 
-                    font-weight: bold; 
-                }
-                td:last-child { 
-                    text-align: right; 
-                    color: #4ecdc4; 
-                    font-weight: bold; 
-                    text-shadow: 0 0 3px rgba(78,205,196,0.3);
-                }
-
-                .vu-container { 
-                    margin: 10px 0; 
-                }
-                .vu-track { 
-                    width: 100%; 
-                    height: 18px; 
-                    background: linear-gradient(180deg, #000 0%, #0a0a0a 100%); 
-                    border: 1px solid #555; 
-                    border-radius: 4px; 
-                    overflow: hidden; 
-                    position: relative; 
-                    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-                }
-                .vu-fill { 
-                    height: 100%; 
-                    width: 0%; 
-                    transition: width 0.05s ease; 
-                    background: linear-gradient(90deg, #2ed573 0%, #2ed573 60%, #ffa502 80%, #ff4757 95%);
-                    box-shadow: 0 0 10px rgba(46,213,115,0.6);
-                }
-                .vu-label { 
-                    display: flex; 
-                    justify-content: space-between; 
-                    font-size: 9px; 
-                    margin-bottom: 3px; 
-                    font-weight: bold; 
-                }
-                .vu-label span:first-child { color: #666; }
-                .vu-label span:last-child { color: #4ecdc4; }
-
-                .status-grid { 
-                    display: grid; 
-                    grid-template-columns: 1fr 1fr; 
-                    gap: 8px; 
-                    font-size: 10px; 
-                }
-                .status-item { 
-                    background: rgba(0,0,0,0.3); 
-                    padding: 6px 8px; 
-                    border-radius: 4px; 
-                    border-left: 3px solid #4ecdc4; 
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-                .status-label { color: #888; }
-                .status-value { 
-                    color: #4ecdc4; 
-                    font-weight: bold; 
-                    text-shadow: 0 0 5px rgba(78,205,196,0.4);
-                }
-
-                #pip-footer {
-                    text-align: center;
-                    font-size: 9px;
-                    color: #2ed573;
-                    margin-top: 12px;
-                    padding-top: 8px;
-                    border-top: 1px solid #222;
-                    font-weight: bold;
-                }
-                
-                .pulse { 
-                    animation: pulse 2s ease-in-out infinite; 
-                }
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.7; }
-                }
-
-                .glow {
-                    animation: glow 1.5s ease-in-out infinite alternate;
-                }
-                @keyframes glow {
-                    from { text-shadow: 0 0 5px rgba(78,205,196,0.4); }
-                    to { text-shadow: 0 0 10px rgba(78,205,196,0.8), 0 0 15px rgba(78,205,196,0.4); }
-                }
-
-                ::-webkit-scrollbar { width: 8px; }
-                ::-webkit-scrollbar-track { background: #0a0a0a; }
-                ::-webkit-scrollbar-thumb { 
-                    background: #4ecdc4; 
-                    border-radius: 4px; 
-                }
-                ::-webkit-scrollbar-thumb:hover { background: #3db8af; }
-            </style></head><body>
-            
-            <div id="pip-header" class="pulse">🛸 USS PROMETHEUS - FULL MONITOR</div>
-
-            <div class="pip-grid">
-                <div>
-                    <div class="pip-section">
-                        <div class="pip-section-title">🎚️ 13-Pásmový EQ</div>
-                        <table id="eq-table-pip"></table>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="pip-section">
-                        <div class="pip-section-title">🎛️ Efekty & Ultra HD</div>
-                        <div class="status-grid">
-                            <div class="status-item">
-                                <span class="status-label">🔊 VOLUME</span>
-                                <span id="pip-vol" class="status-value glow">0%</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">🏛️ REVERB</span>
-                                <span id="pip-rev" class="status-value glow">0%</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">💎 SAMPLE RATE</span>
-                                <span id="pip-sr" class="status-value glow">---</span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-label">🎯 SUB-BASS</span>
-                                <span id="pip-sub" class="status-value glow">---</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pip-section">
-                        <div class="pip-section-title">📶 Live Metering</div>
-                        <div class="vu-container">
-                            <div class="vu-label">
-                                <span>CHANNEL L</span>
-                                <span id="pip-l-txt">-60.0 dB</span>
-                            </div>
-                            <div class="vu-track">
-                                <div id="pip-l-bar" class="vu-fill"></div>
-                            </div>
-                        </div>
-                        <div class="vu-container">
-                            <div class="vu-label">
-                                <span>CHANNEL R</span>
-                                <span id="pip-r-txt">-60.0 dB</span>
-                            </div>
-                            <div class="vu-track">
-                                <div id="pip-r-bar" class="vu-fill"></div>
-                            </div>
-                        </div>
-                        <div class="status-item" style="margin-top:10px;">
-                            <span class="status-label">⚠️ PEAK INDICATOR</span>
-                            <span id="pip-peak" class="status-value glow">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="pip-footer" class="glow">● FULL SYNC AKTIVNÍ - WARP 9.99</div>
-
-            </body></html>
-        `);
+        console.log('🚀 USS PROMETHEUS: Spouštím PiP s Canvas streamem...');
         
-        pipWindow.document.close();
-
-        // Synchronizační funkce
+        // 1. VYTVOŘENÍ CANVAS PRO RENDERING
+        pipCanvas = document.createElement('canvas');
+        pipCanvas.width = 720;
+        pipCanvas.height = 600;
+        const ctx = pipCanvas.getContext('2d');
+        
+        // 2. VYTVOŘENÍ VIDEO ELEMENTU
+        pipVideo = document.createElement('video');
+        pipVideo.id = 'pip-video-element-prometheus';
+        pipVideo.style.display = 'none';
+        pipVideo.muted = true; // Musí být muted pro autoplay
+        pipVideo.playsInline = true;
+        document.body.appendChild(pipVideo);
+        
+        // 3. PŘIPOJENÍ CANVAS STREAM K VIDEO
+        const stream = pipCanvas.captureStream(30); // 30 FPS
+        pipVideo.srcObject = stream;
+        await pipVideo.play();
+        
+        // 4. RENDERING FUNKCE
         const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
         
         function dbToPct(db) {
@@ -3292,64 +3032,280 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             if (db > 0) return 100;
             return ((db + 60) / 60) * 100;
         }
-
-        function pipSync() {
-            if (!pipWindow || pipWindow.closed) return;
-
-            try {
-                const mainDoc = document;
-
-                let eqHtml = '';
-                frequencies.forEach(f => {
-                    const val = mainDoc.getElementById('eq-' + f)?.value || '0';
-                    eqHtml += `<tr><td>${f} Hz</td><td>${val} dB</td></tr>`;
-                });
-                pipWindow.document.getElementById('eq-table-pip').innerHTML = eqHtml;
-
-                pipWindow.document.getElementById('pip-vol').textContent = 
-                    (mainDoc.getElementById('volume')?.value * 100 || 0).toFixed(0) + '%';
+        
+        function renderPiPCanvas() {
+            if (!pipCanvas || !pipVideo) return;
+            
+            // POZADÍ
+            const gradient = ctx.createLinearGradient(0, 0, 0, 600);
+            gradient.addColorStop(0, '#0a0a0a');
+            gradient.addColorStop(1, '#1a1a2e');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 720, 600);
+            
+            // HEADER
+            ctx.fillStyle = 'rgba(255, 107, 107, 0.2)';
+            ctx.fillRect(0, 0, 720, 60);
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, 720, 60);
+            
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🛸 USS PROMETHEUS - FULL MONITOR', 360, 38);
+            
+            let yOffset = 80;
+            
+            // LEVÝ PANEL: EQ DATA
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fillRect(20, yOffset, 320, 480);
+            ctx.strokeStyle = '#333';
+            ctx.strokeRect(20, yOffset, 320, 480);
+            
+            ctx.fillStyle = '#ff9f43';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('🎚️ 13-PÁSMOVÝ EQ', 30, yOffset + 25);
+            
+            ctx.strokeStyle = '#222';
+            ctx.beginPath();
+            ctx.moveTo(30, yOffset + 35);
+            ctx.lineTo(330, yOffset + 35);
+            ctx.stroke();
+            
+            ctx.font = '12px Courier New';
+            let eqY = yOffset + 55;
+            frequencies.forEach(f => {
+                const val = document.getElementById('eq-' + f)?.value || '0';
                 
-                pipWindow.document.getElementById('pip-rev').textContent = 
-                    (mainDoc.getElementById('reverb')?.value * 100 || 0).toFixed(0) + '%';
+                ctx.fillStyle = '#888';
+                ctx.textAlign = 'left';
+                ctx.fillText(f + ' Hz', 30, eqY);
                 
-                pipWindow.document.getElementById('pip-sr').textContent = 
-                    mainDoc.getElementById('target-sample-rate')?.value + ' Hz';
+                ctx.fillStyle = '#4ecdc4';
+                ctx.textAlign = 'right';
+                ctx.fillText(val + ' dB', 330, eqY);
                 
-                pipWindow.document.getElementById('pip-sub').textContent = 
-                    mainDoc.getElementById('sub-bass-focus')?.checked ? "✅ ON" : "❌ OFF";
-
-                const lTxt = mainDoc.getElementById('left-meter-value')?.textContent || "-60.0";
-                const rTxt = mainDoc.getElementById('right-meter-value')?.textContent || "-60.0";
-                const lDb = parseFloat(lTxt.replace(/[^0-9.-]/g, ""));
-                const rDb = parseFloat(rTxt.replace(/[^0-9.-]/g, ""));
-
-                pipWindow.document.getElementById('pip-l-bar').style.width = dbToPct(lDb) + '%';
-                pipWindow.document.getElementById('pip-r-bar').style.width = dbToPct(rDb) + '%';
-                pipWindow.document.getElementById('pip-l-txt').textContent = lDb.toFixed(1) + " dB";
-                pipWindow.document.getElementById('pip-r-txt').textContent = rDb.toFixed(1) + " dB";
-
-                pipWindow.document.getElementById('pip-peak').textContent = 
-                    mainDoc.getElementById('peak-indicator')?.textContent || "0";
-
-                requestAnimationFrame(pipSync);
-            } catch(e) {
-                console.warn('PiP sync error:', e);
-            }
+                ctx.strokeStyle = '#1a1a1a';
+                ctx.beginPath();
+                ctx.moveTo(30, eqY + 5);
+                ctx.lineTo(330, eqY + 5);
+                ctx.stroke();
+                
+                eqY += 32;
+            });
+            
+            // PRAVÝ PANEL: EFEKTY
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fillRect(360, yOffset, 340, 220);
+            ctx.strokeStyle = '#333';
+            ctx.strokeRect(360, yOffset, 340, 220);
+            
+            ctx.fillStyle = '#ff9f43';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('🎛️ EFEKTY & ULTRA HD', 370, yOffset + 25);
+            
+            ctx.strokeStyle = '#222';
+            ctx.beginPath();
+            ctx.moveTo(370, yOffset + 35);
+            ctx.lineTo(690, yOffset + 35);
+            ctx.stroke();
+            
+            const volVal = (document.getElementById('volume')?.value * 100 || 0).toFixed(0);
+            const revVal = (document.getElementById('reverb')?.value * 100 || 0).toFixed(0);
+            const srVal = document.getElementById('target-sample-rate')?.value || '---';
+            const subVal = document.getElementById('sub-bass-focus')?.checked ? '✅ ON' : '❌ OFF';
+            
+            const statusData = [
+                { label: '🔊 VOLUME', value: volVal + '%' },
+                { label: '🏛️ REVERB', value: revVal + '%' },
+                { label: '💎 SAMPLE RATE', value: srVal + ' Hz' },
+                { label: '🎯 SUB-BASS', value: subVal }
+            ];
+            
+            let statusY = yOffset + 60;
+            let col = 0;
+            statusData.forEach((item, idx) => {
+                const xPos = 370 + (col * 170);
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fillRect(xPos, statusY, 160, 40);
+                ctx.fillStyle = '#4ecdc4';
+                ctx.fillRect(xPos, statusY, 3, 40);
+                
+                ctx.fillStyle = '#888';
+                ctx.font = '11px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(item.label, xPos + 10, statusY + 18);
+                
+                ctx.fillStyle = '#4ecdc4';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'right';
+                ctx.fillText(item.value, xPos + 150, statusY + 32);
+                
+                col++;
+                if (col >= 2) {
+                    col = 0;
+                    statusY += 50;
+                }
+            });
+            
+            // VU METRY
+            yOffset = 320;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.fillRect(360, yOffset, 340, 240);
+            ctx.strokeStyle = '#333';
+            ctx.strokeRect(360, yOffset, 340, 240);
+            
+            ctx.fillStyle = '#ff9f43';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('📶 LIVE METERING', 370, yOffset + 25);
+            
+            ctx.strokeStyle = '#222';
+            ctx.beginPath();
+            ctx.moveTo(370, yOffset + 35);
+            ctx.lineTo(690, yOffset + 35);
+            ctx.stroke();
+            
+            const lTxt = document.getElementById('left-meter-value')?.textContent || '-60.0';
+            const rTxt = document.getElementById('right-meter-value')?.textContent || '-60.0';
+            const lDb = parseFloat(lTxt.replace(/[^0-9.-]/g, ''));
+            const rDb = parseFloat(rTxt.replace(/[^0-9.-]/g, ''));
+            const lPct = dbToPct(lDb);
+            const rPct = dbToPct(rDb);
+            
+            // CHANNEL L
+            ctx.fillStyle = '#666';
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('CHANNEL L', 370, yOffset + 60);
+            ctx.fillStyle = '#4ecdc4';
+            ctx.textAlign = 'right';
+            ctx.fillText(lDb.toFixed(1) + ' dB', 690, yOffset + 60);
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(370, yOffset + 70, 310, 24);
+            ctx.strokeStyle = '#555';
+            ctx.strokeRect(370, yOffset + 70, 310, 24);
+            
+            const lWidth = (lPct / 100) * 310;
+            const lGrad = ctx.createLinearGradient(370, 0, 680, 0);
+            lGrad.addColorStop(0, '#2ed573');
+            lGrad.addColorStop(0.6, '#2ed573');
+            lGrad.addColorStop(0.8, '#ffa502');
+            lGrad.addColorStop(1, '#ff4757');
+            ctx.fillStyle = lGrad;
+            ctx.fillRect(370, yOffset + 70, lWidth, 24);
+            
+            // CHANNEL R
+            ctx.fillStyle = '#666';
+            ctx.font = 'bold 11px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('CHANNEL R', 370, yOffset + 120);
+            ctx.fillStyle = '#4ecdc4';
+            ctx.textAlign = 'right';
+            ctx.fillText(rDb.toFixed(1) + ' dB', 690, yOffset + 120);
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(370, yOffset + 130, 310, 24);
+            ctx.strokeStyle = '#555';
+            ctx.strokeRect(370, yOffset + 130, 310, 24);
+            
+            const rWidth = (rPct / 100) * 310;
+            const rGrad = ctx.createLinearGradient(370, 0, 680, 0);
+            rGrad.addColorStop(0, '#2ed573');
+            rGrad.addColorStop(0.6, '#2ed573');
+            rGrad.addColorStop(0.8, '#ffa502');
+            rGrad.addColorStop(1, '#ff4757');
+            ctx.fillStyle = rGrad;
+            ctx.fillRect(370, yOffset + 130, rWidth, 24);
+            
+            // PEAK INDICATOR
+            const peakVal = document.getElementById('peak-indicator')?.textContent || '0';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillRect(370, yOffset + 170, 310, 40);
+            ctx.fillStyle = '#4ecdc4';
+            ctx.fillRect(370, yOffset + 170, 3, 40);
+            
+            ctx.fillStyle = '#888';
+            ctx.font = '11px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('⚠️ PEAK INDICATOR', 380, yOffset + 188);
+            
+            ctx.fillStyle = '#4ecdc4';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(peakVal, 670, yOffset + 200);
+            
+            // FOOTER
+            ctx.fillStyle = '#2ed573';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('● FULL SYNC AKTIVNÍ - WARP 9.99', 360, 580);
+            
+            pipAnimationFrame = requestAnimationFrame(renderPiPCanvas);
         }
         
-        requestAnimationFrame(pipSync);
-
-        pipWindow.addEventListener('pagehide', () => {
-            pipWindow = null;
-        });
-
+        renderPiPCanvas();
+        
+        // 5. AKTIVACE PiP
+        await pipVideo.requestPictureInPicture();
+        
+        console.log('✅ USS PROMETHEUS: PiP AKTIVOVÁN s Canvas streamem!');
+        alert('✅ PiP okno aktivováno!\n\n🛸 Plovoucí monitor USS Prometheus je aktivní.\n\nPro zavření klikni znovu na 📺 PiP tlačítko.');
+        
+        // Detekce zavření PiP
+        pipVideo.addEventListener('leavepictureinpicture', () => {
+            closePiPWindow();
+        }, { once: true });
+        
     } catch (error) {
-        console.error('PiP error:', error);
-        alert('⚠️ Chyba při spuštění PiP:\n' + error.message + '\n\nZkus to v Chrome/Edge 116+ na desktopu.');
+        console.error('❌ PiP error:', error);
+        
+        let message = 'PiP se nepodařilo aktivovat!';
+        if (error.name === 'NotAllowedError') {
+            message = '⚠️ PiP bylo blokováno.\n\nPokud jsi na iOS, zkus:\n1. Otevřít video v Safari\n2. Použít nativní PiP ovládání';
+        } else if (error.name === 'NotSupportedError') {
+            message = '⚠️ Tvůj prohlížeč nepodporuje PiP.\n\nZkus Chrome 90+ nebo Safari na iOS.';
+        }
+        
+        alert(message + '\n\nChyba: ' + error.message);
+        closePiPWindow();
     }
 };
 
-// 🔄 FALLBACK FUNKCE: Klasické popup okno (pro Android/nepodporované prohlížeče)
+// 🔒 FUNKCE PRO ZAVŘENÍ PiP
+function closePiPWindow() {
+    if (pipAnimationFrame) {
+        cancelAnimationFrame(pipAnimationFrame);
+        pipAnimationFrame = null;
+    }
+    
+    if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(err => {
+            console.warn('Chyba při ukončení PiP:', err);
+        });
+    }
+    
+    if (pipVideo) {
+        pipVideo.srcObject = null;
+        pipVideo.remove();
+        pipVideo = null;
+    }
+    
+    if (pipCanvas) {
+        pipCanvas = null;
+    }
+    
+    pipWindow = null;
+    
+    console.log('🔒 USS PROMETHEUS: PiP zavřeno');
+}
+
+// 🔄 FALLBACK FUNKCE (stejná jako předtím)
 function openFallbackPopup() {
     pipWindow = window.open('', 'StarfleetMonitor', 'width=720,height=600,resizable=yes');
     
@@ -3358,168 +3314,32 @@ function openFallbackPopup() {
         return;
     }
 
-    // Stejný HTML obsah jako PiP, ale v klasickém okně
     pipWindow.document.write(`
         <html><head>
         <title>🛸 USS PROMETHEUS - POPUP MODE</title>
         <style>
-            /* STEJNÉ STYLY JAKO PiP */
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { 
                 background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); 
                 color: #4ecdc4; 
-                font-family: 'Consolas', 'Courier New', monospace; 
-                font-size: 11px;
+                font-family: 'Consolas', monospace; 
                 padding: 12px;
-                overflow-y: auto;
-                user-select: none;
             }
-            
             #pip-header {
-                background: linear-gradient(135deg, rgba(255,159,67,0.2), rgba(255,159,67,0.1));
+                background: rgba(255,159,67,0.2);
                 border: 2px solid #ff9f43;
-                border-radius: 6px;
                 padding: 10px;
-                margin-bottom: 12px;
                 text-align: center;
-                font-weight: bold;
                 color: #ff9f43;
-                text-transform: uppercase;
-                font-size: 11px;
-                letter-spacing: 2px;
-            }
-
-            .pip-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 12px; }
-            .pip-section {
-                background: rgba(255,255,255,0.03);
-                border: 1px solid #333;
-                border-radius: 6px;
-                padding: 10px;
-                margin-bottom: 10px;
-            }
-            .pip-section-title {
-                color: #ff9f43;
-                font-size: 11px;
                 font-weight: bold;
-                margin-bottom: 8px;
-                padding-bottom: 4px;
-                border-bottom: 1px solid #222;
-                text-transform: uppercase;
+                margin-bottom: 12px;
             }
-            table { width: 100%; border-collapse: collapse; font-size: 10px; }
-            td { border-bottom: 1px solid #1a1a1a; padding: 4px 6px; }
-            td:first-child { color: #888; font-weight: bold; }
-            td:last-child { text-align: right; color: #4ecdc4; font-weight: bold; }
-            .vu-container { margin: 10px 0; }
-            .vu-track { 
-                width: 100%; height: 18px; 
-                background: #000; border: 1px solid #555; 
-                border-radius: 4px; overflow: hidden; 
-            }
-            .vu-fill { 
-                height: 100%; width: 0%; 
-                transition: width 0.05s ease; 
-                background: linear-gradient(90deg, #2ed573 0%, #2ed573 60%, #ffa502 80%, #ff4757 95%);
-            }
-            .vu-label { display: flex; justify-content: space-between; font-size: 9px; margin-bottom: 3px; font-weight: bold; }
-            .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; }
-            .status-item { 
-                background: rgba(0,0,0,0.3); 
-                padding: 6px 8px; 
-                border-radius: 4px; 
-                border-left: 3px solid #4ecdc4; 
-                display: flex; justify-content: space-between;
-            }
-            .status-value { color: #4ecdc4; font-weight: bold; }
-            #pip-footer { text-align: center; font-size: 9px; color: #ff9f43; margin-top: 12px; padding-top: 8px; border-top: 1px solid #222; font-weight: bold; }
         </style></head><body>
-        
-        <div id="pip-header">⚠️ POPUP MODE (PiP není podporován)</div>
-
-        <div class="pip-grid">
-            <div>
-                <div class="pip-section">
-                    <div class="pip-section-title">🎚️ 13-Pásmový EQ</div>
-                    <table id="eq-table-pip"></table>
-                </div>
-            </div>
-            <div>
-                <div class="pip-section">
-                    <div class="pip-section-title">🎛️ Efekty</div>
-                    <div class="status-grid">
-                        <div class="status-item"><span>🔊 VOL</span><span id="pip-vol" class="status-value">0%</span></div>
-                        <div class="status-item"><span>🏛️ REV</span><span id="pip-rev" class="status-value">0%</span></div>
-                        <div class="status-item"><span>💎 SR</span><span id="pip-sr" class="status-value">---</span></div>
-                        <div class="status-item"><span>🎯 SUB</span><span id="pip-sub" class="status-value">---</span></div>
-                    </div>
-                </div>
-                <div class="pip-section">
-                    <div class="pip-section-title">📶 Metering</div>
-                    <div class="vu-container">
-                        <div class="vu-label"><span>L</span><span id="pip-l-txt">-60.0 dB</span></div>
-                        <div class="vu-track"><div id="pip-l-bar" class="vu-fill"></div></div>
-                    </div>
-                    <div class="vu-container">
-                        <div class="vu-label"><span>R</span><span id="pip-r-txt">-60.0 dB</span></div>
-                        <div class="vu-track"><div id="pip-r-bar" class="vu-fill"></div></div>
-                    </div>
-                    <div class="status-item" style="margin-top:10px;">
-                        <span>⚠️ PEAK</span><span id="pip-peak" class="status-value">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div id="pip-footer">⚠️ FALLBACK MODE - KLASICKÉ OKNO</div>
+        <div id="pip-header">⚠️ POPUP MODE - PiP není podporován</div>
+        <p style="text-align:center;">Fallback režim aktivní</p>
         </body></html>
     `);
     pipWindow.document.close();
-
-    // Stejná sync logika
-    const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
-    function dbToPct(db) {
-        if (db < -60) return 0;
-        if (db > 0) return 100;
-        return ((db + 60) / 60) * 100;
-    }
-
-    function fallbackSync() {
-        if (!pipWindow || pipWindow.closed) {
-            pipWindow = null;
-            return;
-        }
-        try {
-            let eqHtml = '';
-            frequencies.forEach(f => {
-                const val = document.getElementById('eq-' + f)?.value || '0';
-                eqHtml += `<tr><td>${f} Hz</td><td>${val} dB</td></tr>`;
-            });
-            pipWindow.document.getElementById('eq-table-pip').innerHTML = eqHtml;
-
-            pipWindow.document.getElementById('pip-vol').textContent = 
-                (document.getElementById('volume')?.value * 100 || 0).toFixed(0) + '%';
-            pipWindow.document.getElementById('pip-rev').textContent = 
-                (document.getElementById('reverb')?.value * 100 || 0).toFixed(0) + '%';
-            pipWindow.document.getElementById('pip-sr').textContent = 
-                document.getElementById('target-sample-rate')?.value + ' Hz';
-            pipWindow.document.getElementById('pip-sub').textContent = 
-                document.getElementById('sub-bass-focus')?.checked ? "✅" : "❌";
-
-            const lTxt = document.getElementById('left-meter-value')?.textContent || "-60.0";
-            const rTxt = document.getElementById('right-meter-value')?.textContent || "-60.0";
-            const lDb = parseFloat(lTxt.replace(/[^0-9.-]/g, ""));
-            const rDb = parseFloat(rTxt.replace(/[^0-9.-]/g, ""));
-
-            pipWindow.document.getElementById('pip-l-bar').style.width = dbToPct(lDb) + '%';
-            pipWindow.document.getElementById('pip-r-bar').style.width = dbToPct(rDb) + '%';
-            pipWindow.document.getElementById('pip-l-txt').textContent = lDb.toFixed(1) + " dB";
-            pipWindow.document.getElementById('pip-r-txt').textContent = rDb.toFixed(1) + " dB";
-            pipWindow.document.getElementById('pip-peak').textContent = 
-                document.getElementById('peak-indicator')?.textContent || "0";
-
-            requestAnimationFrame(fallbackSync);
-        } catch(e) {}
-    }
-    requestAnimationFrame(fallbackSync);
 }
     </script>
 </body>

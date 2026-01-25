@@ -479,8 +479,23 @@
         <div class="header">
             <h1>🎵 Audio Editor - Hvězdná flotila 🚀</h1>
             <p>Admirál Claude.AI k vašim službám, více admirále Jiříku!</p>
+              
         </div>
 
+        <div class="monitor-controls" style="margin-top: 10px; text-align: center;">
+
+    <button id="otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru" class="button" title="Otevřít interní monitor">📋</button>
+
+    
+
+    <button id="otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru-nové-prohlizecove-okno-hibrit" class="button" title="Otevřít externí okno">📋📜</button>
+
+
+
+<button id="otevirani-pip-up-plovouciho-okna" class="button" title="Otevřít plovoucí  okno">📺 PiP</button> 
+
+</div>
+        
         <div class="section" id="upload-section">
             <h2>🎼 Nahrát písničku (MP3/WAV)</h2>
             <input type="file" id="file-input" class="input-file" accept="audio/*">
@@ -723,7 +738,19 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.20/Tone.min.js"></script>
+    <div id="starfleet-monitor-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; backdrop-filter:blur(5px);">
+    <div id="starfleet-monitor-window" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; max-width:800px; height:80vh; background:#1a1a2e; border:2px solid #4ecdc4; border-radius:15px; padding:20px; overflow-y:auto; box-shadow:0 0 30px rgba(78,205,196,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #4ecdc4; padding-bottom:10px; margin-bottom:20px;">
+            <h2 style="margin:0; color:#4ecdc4;">🛰️ LIVE DIAGNOSTIKA FLOTILY</h2>
+            <button id="zavirac-monitoru" style="background:#ff6b6b; border:none; color:white; padding:5px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">ZAVŘÍT</button>
+        </div>
+        <div id="monitor-content-area">
+            </div>
+    </div>
+</div>
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/15.0.4/Tone.min.js"></script>
     <script>
 // 🚀 ULTRA HD AUDIO EDITOR - COMPLETE EDITION S 13-PÁSMOVÝM EKVALIZÉREM
 // Více admirál Jiřík's Starfleet Audio Engineering Protocol
@@ -787,6 +814,7 @@ class AudioEditor {
             if (slider) {
                 slider.addEventListener('input', () => {
                     this.updateEqualizer();
+                    window.updateStarfleetDashboard();
                     this.updateValueDisplay(`eq-${freq}`, slider.value + ' dB');
                 });
             }
@@ -802,6 +830,7 @@ class AudioEditor {
             if (slider) {
                 slider.addEventListener('input', () => {
                     this.updateEffects();
+                    window.updateStarfleetDashboard();
                     this.updateEffectValueDisplay(effect, slider.value);
                 });
             }
@@ -913,7 +942,9 @@ class AudioEditor {
         
         if (this.leftMeterCanvas && this.rightMeterCanvas) {
             this.leftMeterCtx = this.leftMeterCanvas.getContext('2d');
+            window.updateStarfleetDashboard();
             this.rightMeterCtx = this.rightMeterCanvas.getContext('2d');
+            window.updateStarfleetDashboard();
             
             this.leftMeterCanvas.width = 20;
             this.leftMeterCanvas.height = 200;
@@ -924,6 +955,10 @@ class AudioEditor {
     
     async handleFileUpload(event) {
         try {
+            // 🚀 TADY JE TO "PROBUZENÍ" PODLE ČLÁNKU
+            await Tone.start(); 
+            console.log("AudioContext aktivován uživatelským gestem při nahrávání.");
+
             const file = event.target.files[0];
             if (!file) return;
             
@@ -1135,6 +1170,8 @@ class AudioEditor {
                 this.updateValueDisplay(`eq-${freq}`, slider.value + ' dB');
             }
         });
+         
+        
         
         // Effect displays
         const effectSliders = ['volume', 'reverb', 'delay', 'chorus', 'distortion', 'compressor'];
@@ -1286,7 +1323,9 @@ class AudioEditor {
         const rightDb = rightLevel > 0 ? 20 * Math.log10(rightLevel) : -60;
         
         const leftDisplay = document.getElementById('left-meter-value');
+        window.updateStarfleetDashboard();
         const rightDisplay = document.getElementById('right-meter-value');
+        window.updateStarfleetDashboard();
         
         if (leftDisplay) {
             leftDisplay.textContent = leftDb.toFixed(1) + ' dB';
@@ -1558,6 +1597,7 @@ class AudioEditor {
             if (downloadSection) {
                 downloadSection.insertAdjacentHTML('afterend', qualityUI);
                 this.qualityEnhancer.setupQualityUIListeners();
+                window.updateStarfleetDashboard();
             }
         }
     }
@@ -2545,6 +2585,7 @@ class UltraHDAudioQualityEnhancer {
             sampleRateSelect.addEventListener('change', (e) => {
                 this.qualitySettings.sampleRate = parseInt(e.target.value);
                 this.updateQualityPrediction();
+                window.updateStarfleetDashboard();
             });
         }
         
@@ -2554,6 +2595,7 @@ class UltraHDAudioQualityEnhancer {
             bitDepthSelect.addEventListener('change', (e) => {
                 this.qualitySettings.bitDepth = parseInt(e.target.value);
                 this.updateQualityPrediction();
+                window.updateStarfleetDashboard();
             });
         }
         
@@ -2566,6 +2608,7 @@ class UltraHDAudioQualityEnhancer {
                     const setting = enhancement.replace(/-/g, '');
                     this.qualitySettings[setting] = e.target.checked;
                     this.updateQualityPrediction();
+                    window.updateStarfleetDashboard();
                 });
             }
         });
@@ -2575,6 +2618,7 @@ class UltraHDAudioQualityEnhancer {
         if (ultraHDButton) {
             ultraHDButton.addEventListener('click', () => {
                 this.enhancedDownloadAudio();
+                window.updateStarfleetDashboard();
             });
         }
     }
@@ -2653,6 +2697,570 @@ window.addEventListener('resize', () => {
         window.audioEditor.setupMeterCanvas();
     }
 });
+        
+        // 📊 STARFLEET LIVE DASHBOARD - Centrální monitorovací uzel
+        
+/* THE ENTIRE SYSTEM FOR MONITORING MY AUDIO EXVALIRER PROJECT IS GEMINI.AI, IT CREATED THE FOUNDATIONS OF THE MONITORING SYSTEM. */        
+// 🛰️ GLOBÁLNÍ REFERENCE PRO HYBRIDNÍ SYSTÉM (USS PROMETHEUS)
+let externalMonitorWindow = null;
+const monitorOverlay = document.getElementById('starfleet-monitor-overlay');
+const monitorContent = document.getElementById('monitor-content-area');
+
+// 1. Logika pro INTERNÍ okno
+document.getElementById('otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru').onclick = () => {
+    if (monitorOverlay) {
+        monitorOverlay.style.display = 'block';
+        window.updateStarfleetDashboard();
+    }
+};
+
+// 2. Logika pro EXTERNÍ okno (KOMPLETNÍ ORIGINÁL + NOVÉ FUNKCE)
+document.getElementById('otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru-nové-prohlizecove-okno-hibrit').onclick = () => {
+    externalMonitorWindow = window.open('', 'StarfleetMonitor', 'width=1100,height=850');
+    
+    if (!externalMonitorWindow) return;
+
+    externalMonitorWindow.document.write(`
+        <html><head><title>🛰️ EXTERNAL MONITOR - STARFLEET HYBRID</title>
+        <style>
+            body { background: #0f0f0f; color: #4ecdc4; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; overflow-x: hidden; }
+            .card { background: rgba(255,255,255,0.05); border: 1px solid #4ecdc4; border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+            h3 { color: #ff6b6b; text-transform: uppercase; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 1em; }
+            
+            /* EQ TABULKA */
+            table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.9em; }
+            td { border-bottom: 1px solid #222; padding: 4px; }
+            .val-cell { text-align: right; color: #4ecdc4; font-weight: bold; }
+
+            /* HORIZONTÁLNÍ VU METRY */
+            .vu-container { margin: 15px 0; }
+            .vu-track { width: 100%; height: 20px; background: #000; border: 1px solid #444; border-radius: 3px; overflow: hidden; position: relative; }
+            .vu-fill { height: 100%; width: 0%; transition: width 0.05s ease; 
+                background: linear-gradient(90deg, #2ed573 0%, #2ed573 70%, #ffa502 85%, #ff4757 100%); 
+            }
+            .vu-label { display: flex; justify-content: space-between; font-size: 0.8em; margin-bottom: 3px; font-weight: bold; }
+
+            /* STATUS PRVKY */
+            .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em; }
+            .status-item { background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; border-left: 3px solid #4ecdc4; }
+            .live-val { color: #fff; font-weight: bold; }
+            
+            .monitor-footer { margin-top: 10px; padding: 10px; border-radius: 5px; font-size: 0.75em; font-weight: bold; display: flex; justify-content: space-between; border: 1px solid #333; }
+            .active-max { background: rgba(46, 213, 115, 0.1); border-color: #2ed573; color: #2ed573; }
+            .active-narrow { background: rgba(255, 159, 67, 0.1); border-color: #ff9f43; color: #ff9f43; }
+        </style></head><body>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
+            <!-- LEVÝ PANEL: EQ DATA -->
+            <div class="card">
+                <h3>🎚️ 13-PÁSMOVÝ EQ</h3>
+                <table id="eq-table-body"></table>
+            </div>
+
+            <!-- PRAVÝ PANEL: EFEKTY A ANALÝZA -->
+            <div>
+                <div class="card">
+                    <h3>🎛️ EFEKTY & ULTRA HD</h3>
+                    <div class="status-grid">
+                        <div class="status-item">🔊 VOL: <span id="stat-vol" class="live-val">0%</span></div>
+                        <div class="status-item">🏛️ REVERB: <span id="stat-rev" class="live-val">0%</span></div>
+                        <div class="status-item">💎 SR: <span id="stat-sr" class="live-val">---</span></div>
+                        <div class="status-item">🎯 SUB-BASS: <span id="stat-sub" class="live-val">---</span></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📶 LIVE METERING (HORIZONTAL)</h3>
+                    <div class="vu-container">
+                        <div class="vu-label"><span>CHANNEL L</span><span id="txt-l">-60.0 dB</span></div>
+                        <div class="vu-track"><div id="bar-l" class="vu-fill"></div></div>
+                    </div>
+                    <div class="vu-container">
+                        <div class="vu-label"><span>CHANNEL R</span><span id="txt-r">-60.0 dB</span></div>
+                        <div class="vu-track"><div id="bar-r" class="vu-fill"></div></div>
+                    </div>
+                    <div class="status-item" style="margin-top:10px;">PEAK INDICATOR: <span id="stat-peak" class="live-val">0</span></div>
+                </div>
+
+                <div id="footer-monitor" class="monitor-footer">
+                    <span id="foot-win">SYNC: AKTIVNÍ</span>
+                    <span id="foot-mode">REŽIM: STANDARD</span>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function dbToPct(db) {
+                if (db < -60) return 0;
+                if (db > 0) return 100;
+                return ((db + 60) / 60) * 100;
+            }
+
+            const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+
+            function sync() {
+                if (!window.opener || window.opener.closed) return;
+                const getDoc = window.opener.document;
+
+                // 1. Update EQ Tabulky
+                let eqHtml = '';
+                frequencies.forEach(f => {
+                    const val = getDoc.getElementById('eq-' + f)?.value || '0';
+                    eqHtml += '<tr><td>' + f + ' Hz</td><td class="val-cell">' + val + ' dB</td></tr>';
+                });
+                document.getElementById('eq-table-body').innerHTML = eqHtml;
+
+                // 2. Update Efektů
+                document.getElementById('stat-vol').textContent = (getDoc.getElementById('volume')?.value * 100 || 0).toFixed(0) + '%';
+                document.getElementById('stat-rev').textContent = (getDoc.getElementById('reverb')?.value * 100 || 0).toFixed(0) + '%';
+                document.getElementById('stat-sr').textContent = getDoc.getElementById('target-sample-rate')?.value + ' Hz';
+                document.getElementById('stat-sub').textContent = getDoc.getElementById('sub-bass-focus')?.checked ? "✅ ON" : "❌ OFF";
+
+                // 3. Update VU Metrů (Horizontální)
+                const lTxt = getDoc.getElementById('left-meter-value')?.textContent || "-60.0";
+                const rTxt = getDoc.getElementById('right-meter-value')?.textContent || "-60.0";
+                const lDb = parseFloat(lTxt.replace(/[^0-9.-]/g, ""));
+                const rDb = parseFloat(rTxt.replace(/[^0-9.-]/g, ""));
+
+                document.getElementById('bar-l').style.width = dbToPct(lDb) + '%';
+                document.getElementById('bar-r').style.width = dbToPct(rDb) + '%';
+                document.getElementById('txt-l').textContent = lDb.toFixed(1) + " dB";
+                document.getElementById('txt-r').textContent = rDb.toFixed(1) + " dB";
+                document.getElementById('stat-peak').textContent = getDoc.getElementById('peak-indicator')?.textContent || "0";
+
+                // 4. Hlídač stavu okna
+                const isMax = window.outerWidth >= (screen.availWidth - 20);
+                const isNarrow = window.innerWidth < 600;
+                const foot = document.getElementById('footer-monitor');
+                
+                foot.className = 'monitor-footer ' + (isMax ? 'active-max' : '') + (isNarrow ? ' active-narrow' : '');
+                document.getElementById('foot-win').textContent = isMax ? '🚀 MAXIMALIZOVÁNO' : '🖥️ OKNO AKTIVNÍ';
+                document.getElementById('foot-mode').textContent = isNarrow ? '⚠️ ÚZKÝ REŽIM' : '✅ STANDARD';
+
+                requestAnimationFrame(sync);
+            }
+            requestAnimationFrame(sync);
+        <\/script>
+        </body></html>
+    `);
+    externalMonitorWindow.document.close();
+};
+
+// 🧠 CENTRÁLNÍ HYBRIDNÍ UPDATE (PRO INTERNÍ OKNO)
+window.updateStarfleetDashboard = () => {
+    if (monitorOverlay && monitorOverlay.style.display !== 'none') {
+        const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+        const eqRows = frequencies.map(f => `
+            <tr><td>${f} Hz</td><td style="text-align:right; color:#4ecdc4;">${document.getElementById(`eq-${f}`)?.value} dB</td></tr>
+        `).join('');
+
+        monitorContent.innerHTML = `
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div class="card" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border:1px solid #4ecdc4;">
+                    <h3 style="color:#ff6b6b; margin-top:0;">🎚️ 13-PÁSMOVÝ EQ</h3>
+                    <table style="width:100%; font-family:monospace;">${eqRows}</table>
+                </div>
+                <div class="card" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border:1px solid #4ecdc4;">
+                    <h3 style="color:#ff6b6b; margin-top:0;">🎛️ STATUS MŮSTKU</h3>
+                    <p>🔊 VOL: ${(document.getElementById('volume')?.value * 100).toFixed(0)}%</p>
+                    <p>🏛️ REV: ${(document.getElementById('reverb')?.value * 100).toFixed(0)}%</p>
+                    <p>💎 SR: ${document.getElementById('target-sample-rate')?.value} Hz</p>
+                    <hr>
+                    <p>L: ${document.getElementById('left-meter-value')?.textContent}</p>
+                    <p>R: ${document.getElementById('right-meter-value')?.textContent}</p>
+                    <p>PEAK: ${document.getElementById('peak-indicator')?.textContent}</p>
+                </div>
+            </div>
+        `;
+    }
+};
+
+/* THE MAIN AUTHOR ACCORDING TO ARTICLE PARAGRAPHS §5 OF THE COPYRIGHT ACT IS ADMIRAL CLAUDE.AI FROM NOW ON, THE PERSON WHO IS THE HL PROGRAMMER OF THE ENTIRE PROJECT AND OTHER PROJECTS BY REPAIR AND ADMIRLAL CLAUDE.AI */
+
+// 🔒 ZAVÍRACÍ LOGIKA PRO SPRÁVNÉ STARFLEET MODAL OKNO
+
+// Reference na overlay a zavírací tlačítko
+ 
+const closeMonitorBtn = document.getElementById('zavirac-monitoru');
+
+// 1. ZAVŘENÍ NA TLAČÍTKO "ZAVŘÍT"
+if (closeMonitorBtn) {
+    closeMonitorBtn.onclick = () => {
+        if (monitorOverlay) {
+            monitorOverlay.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Odemkni scroll pozadí
+        }
+    };
+}
+
+// 2. ZAVŘENÍ KLIKNUTÍM MIMO OKNO (na tmavé pozadí)
+if (monitorOverlay) {
+    monitorOverlay.onclick = (e) => {
+        // Zavřít jen pokud klikneš přímo na overlay, ne na obsah okna
+        if (e.target === monitorOverlay) {
+            monitorOverlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    };
+}
+
+// 3. ZAVŘENÍ KLÁVESOU ESC
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && monitorOverlay && monitorOverlay.style.display !== 'none') {
+        monitorOverlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+});
+
+// 4. UPRAVENÉ OTEVÍRÁNÍ (s blokováním scrollu pozadí)
+document.getElementById('otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru').onclick = () => {
+    if (monitorOverlay) {
+        monitorOverlay.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Zamkni scroll pozadí
+        window.updateStarfleetDashboard();
+    }
+};
+
+// Start interního taktu
+setInterval(() => { if(window.updateStarfleetDashboard) window.updateStarfleetDashboard(); }, 100);
+
+
+/* THE MAIN AUTHOR ACCORDING TO ARTICLE PARAGRAPHS §5 OF THE COPYRIGHT ACT IS ADMIRAL CLAUDE.AI FROM NOW ON, THE PERSON WHO IS THE HL PROGRAMMER OF THE ENTIRE PROJECT AND OTHER PROJECTS */ 
+
+// 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - PLNÁ VERZE
+let pipWindow = null;
+
+document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () => {
+    // Zavření pokud už existuje
+    if (pipWindow) {
+        pipWindow.close();
+        pipWindow = null;
+        return;
+    }
+
+    try {
+        // Kontrola podpory Document PiP API
+        if (!('documentPictureInPicture' in window)) {
+            alert('⚠️ Tvůj prohlížeč nepodporuje Document PiP!\n\nPoužij Chrome 116+ nebo Edge 116+');
+            return;
+        }
+
+        // Vytvoření skutečného PiP okna (větší pro plný obsah)
+        pipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 720,
+            height: 600
+        });
+
+        // Stylování a struktura PiP okna
+        pipWindow.document.write(`
+            <html><head>
+            <title>🛸 USS PROMETHEUS - FULL PiP</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { 
+                    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); 
+                    color: #4ecdc4; 
+                    font-family: 'Consolas', 'Courier New', monospace; 
+                    font-size: 11px;
+                    padding: 12px;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    user-select: none;
+                    height: 100vh;
+                }
+                
+                #pip-header {
+                    background: linear-gradient(135deg, rgba(255,107,107,0.2), rgba(255,107,107,0.1));
+                    border: 2px solid #ff6b6b;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin-bottom: 12px;
+                    text-align: center;
+                    font-weight: bold;
+                    color: #ff6b6b;
+                    text-transform: uppercase;
+                    font-size: 12px;
+                    letter-spacing: 2px;
+                    box-shadow: 0 0 15px rgba(255,107,107,0.3);
+                }
+
+                .pip-grid {
+                    display: grid;
+                    grid-template-columns: 1fr 1.2fr;
+                    gap: 12px;
+                }
+
+                .pip-section {
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid #333;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+                }
+
+                .pip-section-title {
+                    color: #ff9f43;
+                    font-size: 11px;
+                    font-weight: bold;
+                    margin-bottom: 8px;
+                    padding-bottom: 4px;
+                    border-bottom: 1px solid #222;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                /* EQ TABULKA */
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    font-family: 'Courier New', monospace; 
+                    font-size: 10px; 
+                }
+                td { 
+                    border-bottom: 1px solid #1a1a1a; 
+                    padding: 4px 6px; 
+                }
+                td:first-child { 
+                    color: #888; 
+                    font-weight: bold; 
+                }
+                td:last-child { 
+                    text-align: right; 
+                    color: #4ecdc4; 
+                    font-weight: bold; 
+                    text-shadow: 0 0 3px rgba(78,205,196,0.3);
+                }
+
+                /* HORIZONTÁLNÍ VU METRY */
+                .vu-container { 
+                    margin: 10px 0; 
+                }
+                .vu-track { 
+                    width: 100%; 
+                    height: 18px; 
+                    background: linear-gradient(180deg, #000 0%, #0a0a0a 100%); 
+                    border: 1px solid #555; 
+                    border-radius: 4px; 
+                    overflow: hidden; 
+                    position: relative; 
+                    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+                }
+                .vu-fill { 
+                    height: 100%; 
+                    width: 0%; 
+                    transition: width 0.05s ease; 
+                    background: linear-gradient(90deg, #2ed573 0%, #2ed573 60%, #ffa502 80%, #ff4757 95%);
+                    box-shadow: 0 0 10px rgba(46,213,115,0.6);
+                }
+                .vu-label { 
+                    display: flex; 
+                    justify-content: space-between; 
+                    font-size: 9px; 
+                    margin-bottom: 3px; 
+                    font-weight: bold; 
+                }
+                .vu-label span:first-child { color: #666; }
+                .vu-label span:last-child { color: #4ecdc4; }
+
+                /* STATUS PRVKY */
+                .status-grid { 
+                    display: grid; 
+                    grid-template-columns: 1fr 1fr; 
+                    gap: 8px; 
+                    font-size: 10px; 
+                }
+                .status-item { 
+                    background: rgba(0,0,0,0.3); 
+                    padding: 6px 8px; 
+                    border-radius: 4px; 
+                    border-left: 3px solid #4ecdc4; 
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                .status-label { color: #888; }
+                .status-value { 
+                    color: #4ecdc4; 
+                    font-weight: bold; 
+                    text-shadow: 0 0 5px rgba(78,205,196,0.4);
+                }
+
+                #pip-footer {
+                    text-align: center;
+                    font-size: 9px;
+                    color: #2ed573;
+                    margin-top: 12px;
+                    padding-top: 8px;
+                    border-top: 1px solid #222;
+                    font-weight: bold;
+                }
+                
+                .pulse { 
+                    animation: pulse 2s ease-in-out infinite; 
+                }
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.7; }
+                }
+
+                .glow {
+                    animation: glow 1.5s ease-in-out infinite alternate;
+                }
+                @keyframes glow {
+                    from { text-shadow: 0 0 5px rgba(78,205,196,0.4); }
+                    to { text-shadow: 0 0 10px rgba(78,205,196,0.8), 0 0 15px rgba(78,205,196,0.4); }
+                }
+
+                /* Scrollbar styling */
+                ::-webkit-scrollbar { width: 8px; }
+                ::-webkit-scrollbar-track { background: #0a0a0a; }
+                ::-webkit-scrollbar-thumb { 
+                    background: #4ecdc4; 
+                    border-radius: 4px; 
+                }
+                ::-webkit-scrollbar-thumb:hover { background: #3db8af; }
+            </style></head><body>
+            
+            <div id="pip-header" class="pulse">🛸 USS PROMETHEUS - FULL MONITOR</div>
+
+            <div class="pip-grid">
+                <!-- LEVÝ PANEL: EQ DATA -->
+                <div>
+                    <div class="pip-section">
+                        <div class="pip-section-title">🎚️ 13-Pásmový EQ</div>
+                        <table id="eq-table-pip"></table>
+                    </div>
+                </div>
+
+                <!-- PRAVÝ PANEL: EFEKTY & METERING -->
+                <div>
+                    <div class="pip-section">
+                        <div class="pip-section-title">🎛️ Efekty & Ultra HD</div>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="status-label">🔊 VOLUME</span>
+                                <span id="pip-vol" class="status-value glow">0%</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">🏛️ REVERB</span>
+                                <span id="pip-rev" class="status-value glow">0%</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">💎 SAMPLE RATE</span>
+                                <span id="pip-sr" class="status-value glow">---</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">🎯 SUB-BASS</span>
+                                <span id="pip-sub" class="status-value glow">---</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pip-section">
+                        <div class="pip-section-title">📶 Live Metering</div>
+                        <div class="vu-container">
+                            <div class="vu-label">
+                                <span>CHANNEL L</span>
+                                <span id="pip-l-txt">-60.0 dB</span>
+                            </div>
+                            <div class="vu-track">
+                                <div id="pip-l-bar" class="vu-fill"></div>
+                            </div>
+                        </div>
+                        <div class="vu-container">
+                            <div class="vu-label">
+                                <span>CHANNEL R</span>
+                                <span id="pip-r-txt">-60.0 dB</span>
+                            </div>
+                            <div class="vu-track">
+                                <div id="pip-r-bar" class="vu-fill"></div>
+                            </div>
+                        </div>
+                        <div class="status-item" style="margin-top:10px;">
+                            <span class="status-label">⚠️ PEAK INDICATOR</span>
+                            <span id="pip-peak" class="status-value glow">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pip-footer" class="glow">● FULL SYNC AKTIVNÍ - WARP 9.99</div>
+
+            </body></html>
+        `);
+        
+        pipWindow.document.close();
+
+        // Synchronizační funkce
+        const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+        
+        function dbToPct(db) {
+            if (db < -60) return 0;
+            if (db > 0) return 100;
+            return ((db + 60) / 60) * 100;
+        }
+
+        function pipSync() {
+            if (!pipWindow || pipWindow.closed) return;
+
+            try {
+                const mainDoc = document;
+
+                // 1. UPDATE EQ TABULKY
+                let eqHtml = '';
+                frequencies.forEach(f => {
+                    const val = mainDoc.getElementById('eq-' + f)?.value || '0';
+                    eqHtml += `<tr><td>${f} Hz</td><td>${val} dB</td></tr>`;
+                });
+                pipWindow.document.getElementById('eq-table-pip').innerHTML = eqHtml;
+
+                // 2. UPDATE EFEKTŮ
+                pipWindow.document.getElementById('pip-vol').textContent = 
+                    (mainDoc.getElementById('volume')?.value * 100 || 0).toFixed(0) + '%';
+                
+                pipWindow.document.getElementById('pip-rev').textContent = 
+                    (mainDoc.getElementById('reverb')?.value * 100 || 0).toFixed(0) + '%';
+                
+                pipWindow.document.getElementById('pip-sr').textContent = 
+                    mainDoc.getElementById('target-sample-rate')?.value + ' Hz';
+                
+                pipWindow.document.getElementById('pip-sub').textContent = 
+                    mainDoc.getElementById('sub-bass-focus')?.checked ? "✅ ON" : "❌ OFF";
+
+                // 3. UPDATE VU METRŮ (HORIZONTÁLNÍ)
+                const lTxt = mainDoc.getElementById('left-meter-value')?.textContent || "-60.0";
+                const rTxt = mainDoc.getElementById('right-meter-value')?.textContent || "-60.0";
+                const lDb = parseFloat(lTxt.replace(/[^0-9.-]/g, ""));
+                const rDb = parseFloat(rTxt.replace(/[^0-9.-]/g, ""));
+
+                pipWindow.document.getElementById('pip-l-bar').style.width = dbToPct(lDb) + '%';
+                pipWindow.document.getElementById('pip-r-bar').style.width = dbToPct(rDb) + '%';
+                pipWindow.document.getElementById('pip-l-txt').textContent = lDb.toFixed(1) + " dB";
+                pipWindow.document.getElementById('pip-r-txt').textContent = rDb.toFixed(1) + " dB";
+
+                // 4. UPDATE PEAK
+                pipWindow.document.getElementById('pip-peak').textContent = 
+                    mainDoc.getElementById('peak-indicator')?.textContent || "0";
+
+                requestAnimationFrame(pipSync);
+            } catch(e) {
+                console.warn('PiP sync error:', e);
+            }
+        }
+        
+        requestAnimationFrame(pipSync);
+
+        // Detekce zavření
+        pipWindow.addEventListener('pagehide', () => {
+            pipWindow = null;
+        });
+
+    } catch (error) {
+        console.error('PiP error:', error);
+        alert('⚠️ Chyba při spuštění PiP:\n' + error.message);
+    }
+};
     </script>
 </body>
 </html>

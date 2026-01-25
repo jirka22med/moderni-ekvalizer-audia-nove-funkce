@@ -2927,7 +2927,6 @@ setInterval(() => { if(window.updateStarfleetDashboard) window.updateStarfleetDa
 
 /* THE MAIN AUTHOR ACCORDING TO ARTICLE PARAGRAPHS §5 OF THE COPYRIGHT ACT IS ADMIRAL CLAUDE.AI FROM NOW ON, THE PERSON WHO IS THE HL PROGRAMMER OF THE ENTIRE PROJECT AND OTHER PROJECTS */ 
 
-// 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - PLNÁ VERZE
 // 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - ANDROID COMPATIBLE
 let pipWindow = null;
 let pipVideo = null;
@@ -3009,20 +3008,63 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
         pipCanvas = document.createElement('canvas');
         pipCanvas.width = 720;
         pipCanvas.height = 600;
+        pipCanvas.style.border = '2px solid red'; // DEBUG border
         const ctx = pipCanvas.getContext('2d');
+        
+        console.log('✅ Canvas vytvořen:', pipCanvas.width, 'x', pipCanvas.height);
+        
+        // TEST RENDERING - okamžitě vykreslíme něco
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, 720, 600);
+        ctx.fillStyle = '#ff6b6b';
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🛸 USS PROMETHEUS', 360, 300);
+        ctx.fillStyle = '#4ecdc4';
+        ctx.font = '20px Arial';
+        ctx.fillText('Inicializace PiP...', 360, 350);
+        
+        console.log('✅ Test rendering dokončen');
         
         // 2. VYTVOŘENÍ VIDEO ELEMENTU
         pipVideo = document.createElement('video');
         pipVideo.id = 'pip-video-element-prometheus';
-        pipVideo.style.display = 'none';
+        pipVideo.style.position = 'fixed';
+        pipVideo.style.bottom = '10px';
+        pipVideo.style.right = '10px';
+        pipVideo.style.width = '200px';
+        pipVideo.style.zIndex = '999999';
+        pipVideo.style.border = '3px solid lime'; // DEBUG border
         pipVideo.muted = true; // Musí být muted pro autoplay
         pipVideo.playsInline = true;
+        pipVideo.autoplay = true;
         document.body.appendChild(pipVideo);
+        
+        console.log('✅ Video element vytvořen a přidán do DOM');
         
         // 3. PŘIPOJENÍ CANVAS STREAM K VIDEO
         const stream = pipCanvas.captureStream(30); // 30 FPS
+        console.log('✅ Stream vytvořen:', stream);
+        console.log('├─ Active tracks:', stream.getTracks().length);
+        console.log('└─ Video tracks:', stream.getVideoTracks().length);
+        
         pipVideo.srcObject = stream;
+        
+        // Čekáme na loadedmetadata
+        await new Promise((resolve, reject) => {
+            pipVideo.onloadedmetadata = () => {
+                console.log('✅ Video metadata loaded');
+                resolve();
+            };
+            pipVideo.onerror = (e) => {
+                console.error('❌ Video error:', e);
+                reject(new Error('Video element error'));
+            };
+            setTimeout(() => reject(new Error('Timeout waiting for video')), 5000);
+        });
+        
         await pipVideo.play();
+        console.log('✅ Video play() úspěšné');
         
         // 4. RENDERING FUNKCE
         const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
@@ -3252,13 +3294,25 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
         renderPiPCanvas();
         
         // 5. AKTIVACE PiP
-        await pipVideo.requestPictureInPicture();
+        console.log('🎬 Spouštím requestPictureInPicture()...');
         
-        console.log('✅ USS PROMETHEUS: PiP AKTIVOVÁN s Canvas streamem!');
-        alert('✅ PiP okno aktivováno!\n\n🛸 Plovoucí monitor USS Prometheus je aktivní.\n\nPro zavření klikni znovu na 📺 PiP tlačítko.');
+        const pipPromise = pipVideo.requestPictureInPicture();
+        console.log('├─ Promise vytvořen:', pipPromise);
+        
+        await pipPromise;
+        
+        console.log('✅✅✅ USS PROMETHEUS: PiP AKTIVOVÁN ÚSPĚŠNĚ!');
+        console.log('├─ document.pictureInPictureElement:', document.pictureInPictureElement);
+        console.log('└─ pipVideo:', pipVideo);
+        
+        // Po aktivaci skryjeme debug video
+        pipVideo.style.display = 'none';
+        
+        alert('✅ PiP okno aktivováno!\n\n🛸 Mělo by být viditelné jako plovoucí okno.\n\nPokud ho nevidíš, zkontroluj:\n- Pravý dolní roh obrazovky\n- Minimalizované aplikace\n- Notifikační panel (Android)');
         
         // Detekce zavření PiP
         pipVideo.addEventListener('leavepictureinpicture', () => {
+            console.log('🔔 PiP uzavřeno uživatelem');
             closePiPWindow();
         }, { once: true });
         

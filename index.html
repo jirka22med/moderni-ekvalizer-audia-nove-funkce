@@ -2929,129 +2929,103 @@ setInterval(() => { if(window.updateStarfleetDashboard) window.updateStarfleetDa
 /* THE MAIN AUTHOR ACCORDING TO ARTICLE PARAGRAPHS §5 OF THE COPYRIGHT ACT IS ADMIRAL CLAUDE.AI FROM NOW ON, THE PERSON WHO IS THE HL PROGRAMMER OF THE ENTIRE PROJECT AND OTHER PROJECTS */ 
 
  // 🎬 3. LOGIKA PRO SKUTEČNÉ PiP PLOVOUCÍ OKNO - ANDROID COMPATIBLE
+// 🎬 3. LOGIKA PRO PiP S NASTAVITELNOU KVALITOU A RESIZE
 let pipWindow = null;
 let pipVideo = null;
 let pipCanvas = null;
 let pipAnimationFrame = null;
+let currentQuality = '720p'; // Default kvalita
+
+// 📐 KVALITNÍ PRESETS
+const QUALITY_PRESETS = {
+    '144p': { width: 256, height: 144, fps: 15, label: '144p (Low)' },
+    '240p': { width: 426, height: 240, fps: 24, label: '240p (SD)' },
+    '360p': { width: 640, height: 360, fps: 30, label: '360p (SD)' },
+    '480p': { width: 854, height: 480, fps: 30, label: '480p (HD)' },
+    '720p': { width: 1280, height: 720, fps: 60, label: '720p (HD)' },
+    '1080p': { width: 1920, height: 1080, fps: 60, label: '1080p (Full HD)' },
+    '1440p': { width: 2560, height: 1440, fps: 60, label: '1440p (2K)' },
+    '4k': { width: 3840, height: 2160, fps: 60, label: '4K (UHD)' },
+    '8k': { width: 7680, height: 4320, fps: 60, label: '8K (UHD-2)' }
+};
 
 document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () => {
-    // Zavření pokud už existuje
     if (pipVideo || pipWindow) {
         closePiPWindow();
         return;
     }
 
-    // 🔍 DETEKCE PODPORY + POKROČILÁ DIAGNOSTIKA
-    const supportsPiP = 'pictureInPictureEnabled' in document; // ✅ Starší, kompatibilnější API
-    const supportsDocPiP = 'documentPictureInPicture' in window; // ✅ Novější API
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const supportsPiP = 'pictureInPictureEnabled' in document;
+    const supportsDocPiP = 'documentPictureInPicture' in window;
     
-    // 🔬 DETEKCE CHROME VERZE
     const chromeVersion = navigator.userAgent.match(/Chrome\/(\d+)/);
     const chromeVer = chromeVersion ? parseInt(chromeVersion[1]) : 0;
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 📊 DIAGNOSTICKÝ REPORT
     console.log('🛰️ USS PROMETHEUS - PiP DIAGNOSTIKA:');
     console.log('├─ pictureInPictureEnabled:', supportsPiP);
-    console.log('├─ documentPictureInPicture:', supportsDocPiP);
-    console.log('├─ isMobile:', isMobile);
     console.log('├─ Chrome verze:', chromeVer || 'Nedetekováno');
-    console.log('├─ Platform:', isAndroid ? 'Android' : isIOS ? 'iOS' : 'Desktop');
-    console.log('└─ UserAgent:', navigator.userAgent);
+    console.log('└─ Platform:', isAndroid ? 'Android' : isIOS ? 'iOS' : 'Desktop');
 
-    // ⚠️ KONTROLA PODPORY
     if (!supportsPiP && !supportsDocPiP) {
-        let deviceInfo = '';
-        let updateInfo = '';
-        
-        if (isAndroid) {
-            deviceInfo = '📱 Android detekován\n\n';
-            if (chromeVer > 0 && chromeVer < 90) {
-                updateInfo = `Aktuální verze: Chrome ${chromeVer}\n` +
-                            '⚠️ Pro PiP potřebuješ Chrome 90+\n\n' +
-                            '📥 Aktualizuj na:\n' +
-                            '• Stabilní: 144.0.7559.90 (leden 2026)\n\n';
-            } else if (chromeVer >= 144) {
-                updateInfo = `✅ Máš Chrome ${chromeVer}\n` +
-                            '⚠️ PiP není detekováno - zkontroluj nastavení\n\n';
-            } else {
-                updateInfo = 'Zkus Chrome 144+ (stabilní, leden 2026)\n\n';
-            }
-        } else if (isIOS) {
-            deviceInfo = '📱 iOS detekován\n\n';
-            updateInfo = '⚠️ Safari iOS PiP je omezené.\nZkus Chrome nebo otevři v Safari.\n\n';
-        } else {
-            deviceInfo = '💻 Desktop detekován\n\n';
-            updateInfo = 'Zkus Chrome 90+ nebo Edge 79+\n\n';
-        }
-        
-        const useFallback = confirm(
-            '⚠️ DETEKCE PODPORY PiP:\n\n' +
-            deviceInfo +
-            updateInfo +
-            'Chceš otevřít klasické popup okno místo toho?\n\n' +
-            '✅ ANO = Popup okno\n' +
-            '❌ NE = Zrušit'
-        );
-        
-        if (!useFallback) return;
-        openFallbackPopup();
+        alert('⚠️ PiP není podporován!\n\nZkus Chrome 90+ nebo Safari.');
         return;
     }
 
-    // ✅ POKUS O OTEVŘENÍ PiP (CANVAS → VIDEO STREAM metoda)
     try {
-        console.log('🚀 USS PROMETHEUS: Spouštím PiP s Canvas streamem...');
+        console.log('🚀 USS PROMETHEUS: Spouštím PiP v kvalitě ' + currentQuality);
         
-        // 1. VYTVOŘENÍ CANVAS PRO RENDERING - 720p HD
+        const quality = QUALITY_PRESETS[currentQuality];
+        
         pipCanvas = document.createElement('canvas');
-        pipCanvas.width = 1280;  // ✅ 720p šířka
-        pipCanvas.height = 720;  // ✅ 720p výška
-        pipCanvas.style.border = '2px solid red'; // DEBUG border
+        pipCanvas.width = quality.width;
+        pipCanvas.height = quality.height;
         const ctx = pipCanvas.getContext('2d');
         
-        console.log('✅ Canvas vytvořen (720p HD):', pipCanvas.width, 'x', pipCanvas.height);
+        console.log(`✅ Canvas vytvořen (${currentQuality}):`, pipCanvas.width, 'x', pipCanvas.height, '@', quality.fps, 'FPS');
         
-        // TEST RENDERING - okamžitě vykreslíme něco
+        // TEST RENDERING
         ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(0, 0, 1280, 720);
+        ctx.fillRect(0, 0, quality.width, quality.height);
         ctx.fillStyle = '#ff6b6b';
-        ctx.font = 'bold 50px Arial';
+        ctx.font = `bold ${Math.floor(quality.height * 0.07)}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText('🛸 USS PROMETHEUS', 640, 360);
+        ctx.fillText('🛸 USS PROMETHEUS', quality.width / 2, quality.height / 2);
         ctx.fillStyle = '#4ecdc4';
-        ctx.font = '24px Arial';
-        ctx.fillText('Inicializace PiP... (720p HD)', 640, 410);
+        ctx.font = `${Math.floor(quality.height * 0.04)}px Arial`;
+        ctx.fillText(`Inicializace PiP... (${currentQuality} @ ${quality.fps} FPS)`, quality.width / 2, quality.height / 2 + 50);
         
-        console.log('✅ Test rendering dokončen');
-        
-        // 2. VYTVOŘENÍ VIDEO ELEMENTU
+        // VYTVOŘENÍ VIDEO ELEMENTU S RESIZE SCHOPNOSTÍ
         pipVideo = document.createElement('video');
         pipVideo.id = 'pip-video-element-prometheus';
+        
+        // ✅ DŮLEŽITÉ: Nastavení pro volné resize
         pipVideo.style.position = 'fixed';
         pipVideo.style.bottom = '10px';
         pipVideo.style.right = '10px';
-        pipVideo.style.width = '200px';
+        pipVideo.style.width = `${Math.floor(quality.width * 0.3)}px`; // Startovní velikost 30%
+        pipVideo.style.maxWidth = 'none'; // ✅ Bez limitu!
+        pipVideo.style.height = 'auto';
         pipVideo.style.zIndex = '999999';
-        pipVideo.style.border = '3px solid lime'; // DEBUG border
-        pipVideo.muted = true; // Musí být muted pro autoplay
+        pipVideo.style.border = '3px solid lime';
+        pipVideo.style.resize = 'both'; // ✅ Umožní resize
+        pipVideo.style.overflow = 'auto';
+        
+        pipVideo.muted = true;
         pipVideo.playsInline = true;
         pipVideo.autoplay = true;
+        pipVideo.controls = false; // Vypneme native controls
         document.body.appendChild(pipVideo);
         
-        console.log('✅ Video element vytvořen a přidán do DOM');
+        console.log('✅ Video element vytvořen s resize podporou');
         
-        // 3. PŘIPOJENÍ CANVAS STREAM K VIDEO - 60 FPS PRO HD
-        const stream = pipCanvas.captureStream(60); // ✅ 60 FPS pro plynulejší HD obraz
-        console.log('✅ Stream vytvořen:', stream);
-        console.log('├─ Active tracks:', stream.getTracks().length);
-        console.log('└─ Video tracks:', stream.getVideoTracks().length);
+        // STREAM
+        const stream = pipCanvas.captureStream(quality.fps);
+        console.log('✅ Stream vytvořen:', quality.fps, 'FPS');
         
         pipVideo.srcObject = stream;
         
-        // Čekáme na loadedmetadata
         await new Promise((resolve, reject) => {
             pipVideo.onloadedmetadata = () => {
                 console.log('✅ Video metadata loaded');
@@ -3067,7 +3041,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
         await pipVideo.play();
         console.log('✅ Video play() úspěšné');
         
-        // 4. RENDERING FUNKCE
+        // RENDERING FUNKCE S DYNAMICKÝM ŠKÁLOVÁNÍM
         const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
         
         function dbToPct(db) {
@@ -3079,269 +3053,305 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
         function renderPiPCanvas() {
             if (!pipCanvas || !pipVideo) return;
             
-            // POZADÍ - 720p rozměry
-            const gradient = ctx.createLinearGradient(0, 0, 0, 720);
+            const w = quality.width;
+            const h = quality.height;
+            const scale = w / 1280; // Škálování relativně k 720p
+            
+            // POZADÍ
+            const gradient = ctx.createLinearGradient(0, 0, 0, h);
             gradient.addColorStop(0, '#0a0a0a');
             gradient.addColorStop(1, '#1a1a2e');
             ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 1280, 720);
+            ctx.fillRect(0, 0, w, h);
             
-            // HEADER - větší pro HD
+            // HEADER
+            const headerH = Math.floor(h * 0.097);
             ctx.fillStyle = 'rgba(255, 107, 107, 0.2)';
-            ctx.fillRect(0, 0, 1280, 70);
+            ctx.fillRect(0, 0, w, headerH);
             ctx.strokeStyle = '#ff6b6b';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(0, 0, 1280, 70);
+            ctx.lineWidth = Math.max(2, scale * 3);
+            ctx.strokeRect(0, 0, w, headerH);
             
             ctx.fillStyle = '#ff6b6b';
-            ctx.font = 'bold 28px Arial';
+            ctx.font = `bold ${Math.floor(scale * 28)}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText('🛸 USS PROMETHEUS - FULL MONITOR (720p HD)', 640, 45);
+            ctx.fillText(`🛸 USS PROMETHEUS (${currentQuality})`, w / 2, headerH * 0.64);
             
-            let yOffset = 90;
+            let yOffset = Math.floor(h * 0.125);
             
-            // LEVÝ PANEL: EQ DATA - větší
+            // LEVÝ PANEL: EQ
+            const eqW = Math.floor(w * 0.438);
+            const eqH = Math.floor(h * 0.82);
             ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.fillRect(30, yOffset, 560, 590);
+            ctx.fillRect(Math.floor(w * 0.023), yOffset, eqW, eqH);
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(30, yOffset, 560, 590);
+            ctx.lineWidth = Math.max(1, scale * 2);
+            ctx.strokeRect(Math.floor(w * 0.023), yOffset, eqW, eqH);
             
             ctx.fillStyle = '#ff9f43';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'left';
-            ctx.fillText('🎚️ 13-PÁSMOVÝ EQ', 45, yOffset + 35);
+            ctx.fillText('🎚️ 13-PÁSMOVÝ EQ', Math.floor(w * 0.035), yOffset + Math.floor(scale * 35));
             
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(45, yOffset + 45);
-            ctx.lineTo(575, yOffset + 45);
-            ctx.stroke();
+            ctx.font = `${Math.floor(scale * 16)}px Courier New`;
+            let eqY = yOffset + Math.floor(scale * 75);
+            const eqSpacing = Math.floor(scale * 40);
             
-            ctx.font = '16px Courier New';
-            let eqY = yOffset + 75;
             frequencies.forEach(f => {
                 const val = document.getElementById('eq-' + f)?.value || '0';
                 
                 ctx.fillStyle = '#888';
                 ctx.textAlign = 'left';
-                ctx.fillText(f + ' Hz', 45, eqY);
+                ctx.fillText(f + ' Hz', Math.floor(w * 0.035), eqY);
                 
                 ctx.fillStyle = '#4ecdc4';
                 ctx.textAlign = 'right';
-                ctx.fillText(val + ' dB', 575, eqY);
+                ctx.fillText(val + ' dB', Math.floor(w * 0.449), eqY);
                 
                 ctx.strokeStyle = '#1a1a1a';
-                ctx.lineWidth = 1;
                 ctx.beginPath();
-                ctx.moveTo(45, eqY + 6);
-                ctx.lineTo(575, eqY + 6);
+                ctx.moveTo(Math.floor(w * 0.035), eqY + 6);
+                ctx.lineTo(Math.floor(w * 0.449), eqY + 6);
                 ctx.stroke();
                 
-                eqY += 40;
+                eqY += eqSpacing;
             });
             
-            // PRAVÝ PANEL: EFEKTY - větší
+            // PRAVÝ PANEL: EFEKTY
+            const rightX = Math.floor(w * 0.484);
+            const rightW = Math.floor(w * 0.492);
+            const effectH = Math.floor(h * 0.389);
+            
             ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.fillRect(620, yOffset, 630, 280);
+            ctx.fillRect(rightX, yOffset, rightW, effectH);
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(620, yOffset, 630, 280);
+            ctx.strokeRect(rightX, yOffset, rightW, effectH);
             
             ctx.fillStyle = '#ff9f43';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'left';
-            ctx.fillText('🎛️ EFEKTY & ULTRA HD', 635, yOffset + 35);
-            
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(635, yOffset + 45);
-            ctx.lineTo(1235, yOffset + 45);
-            ctx.stroke();
+            ctx.fillText('🎛️ EFEKTY', rightX + Math.floor(scale * 15), yOffset + Math.floor(scale * 35));
             
             const volVal = (document.getElementById('volume')?.value * 100 || 0).toFixed(0);
             const revVal = (document.getElementById('reverb')?.value * 100 || 0).toFixed(0);
             const srVal = document.getElementById('target-sample-rate')?.value || '---';
-            const subVal = document.getElementById('sub-bass-focus')?.checked ? '✅ ON' : '❌ OFF';
+            const subVal = document.getElementById('sub-bass-focus')?.checked ? '✅' : '❌';
             
             const statusData = [
-                { label: '🔊 VOLUME', value: volVal + '%' },
-                { label: '🏛️ REVERB', value: revVal + '%' },
-                { label: '💎 SAMPLE RATE', value: srVal + ' Hz' },
-                { label: '🎯 SUB-BASS', value: subVal }
+                { label: '🔊 VOL', value: volVal + '%' },
+                { label: '🏛️ REV', value: revVal + '%' },
+                { label: '💎 SR', value: srVal },
+                { label: '🎯 SUB', value: subVal }
             ];
             
-            let statusY = yOffset + 80;
+            let statusY = yOffset + Math.floor(scale * 80);
             let col = 0;
-            statusData.forEach((item, idx) => {
-                const xPos = 635 + (col * 305);
+            
+            statusData.forEach(item => {
+                const xPos = rightX + Math.floor(scale * 15) + (col * Math.floor(scale * 305));
+                const boxW = Math.floor(scale * 290);
+                const boxH = Math.floor(scale * 55);
                 
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                ctx.fillRect(xPos, statusY, 290, 55);
+                ctx.fillRect(xPos, statusY, boxW, boxH);
                 ctx.fillStyle = '#4ecdc4';
-                ctx.fillRect(xPos, statusY, 4, 55);
+                ctx.fillRect(xPos, statusY, 4, boxH);
                 
                 ctx.fillStyle = '#888';
-                ctx.font = '15px Arial';
+                ctx.font = `${Math.floor(scale * 15)}px Arial`;
                 ctx.textAlign = 'left';
-                ctx.fillText(item.label, xPos + 15, statusY + 25);
+                ctx.fillText(item.label, xPos + 15, statusY + Math.floor(boxH * 0.45));
                 
                 ctx.fillStyle = '#4ecdc4';
-                ctx.font = 'bold 18px Arial';
+                ctx.font = `bold ${Math.floor(scale * 18)}px Arial`;
                 ctx.textAlign = 'right';
-                ctx.fillText(item.value, xPos + 275, statusY + 45);
+                ctx.fillText(item.value, xPos + boxW - 15, statusY + Math.floor(boxH * 0.82));
                 
                 col++;
                 if (col >= 2) {
                     col = 0;
-                    statusY += 70;
+                    statusY += Math.floor(scale * 70);
                 }
             });
             
-            // VU METRY - větší
-            yOffset = 400;
+            // VU METRY
+            const vuY = Math.floor(h * 0.556);
+            const vuH = Math.floor(h * 0.389);
+            
             ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-            ctx.fillRect(620, yOffset, 630, 280);
+            ctx.fillRect(rightX, vuY, rightW, vuH);
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(620, yOffset, 630, 280);
+            ctx.strokeRect(rightX, vuY, rightW, vuH);
             
             ctx.fillStyle = '#ff9f43';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'left';
-            ctx.fillText('📶 LIVE METERING', 635, yOffset + 35);
-            
-            ctx.strokeStyle = '#222';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(635, yOffset + 45);
-            ctx.lineTo(1235, yOffset + 45);
-            ctx.stroke();
+            ctx.fillText('📶 METERING', rightX + Math.floor(scale * 15), vuY + Math.floor(scale * 35));
             
             const lTxt = document.getElementById('left-meter-value')?.textContent || '-60.0';
             const rTxt = document.getElementById('right-meter-value')?.textContent || '-60.0';
             const lDb = parseFloat(lTxt.replace(/[^0-9.-]/g, ''));
             const rDb = parseFloat(rTxt.replace(/[^0-9.-]/g, ''));
-            const lPct = dbToPct(lDb);
-            const rPct = dbToPct(rDb);
             
-            // CHANNEL L - větší
+            // CHANNEL L
+            const meterY = vuY + Math.floor(scale * 80);
+            const meterW = Math.floor(scale * 590);
+            const meterH = Math.floor(scale * 32);
+            
             ctx.fillStyle = '#666';
-            ctx.font = 'bold 16px Arial';
+            ctx.font = `bold ${Math.floor(scale * 16)}px Arial`;
             ctx.textAlign = 'left';
-            ctx.fillText('CHANNEL L', 635, yOffset + 80);
+            ctx.fillText('L', rightX + Math.floor(scale * 15), meterY);
             ctx.fillStyle = '#4ecdc4';
             ctx.textAlign = 'right';
-            ctx.fillText(lDb.toFixed(1) + ' dB', 1235, yOffset + 80);
+            ctx.fillText(lDb.toFixed(1) + ' dB', rightX + rightW - Math.floor(scale * 15), meterY);
             
             ctx.fillStyle = '#000';
-            ctx.fillRect(635, yOffset + 95, 590, 32);
+            ctx.fillRect(rightX + Math.floor(scale * 15), meterY + 10, meterW, meterH);
             ctx.strokeStyle = '#555';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(635, yOffset + 95, 590, 32);
+            ctx.strokeRect(rightX + Math.floor(scale * 15), meterY + 10, meterW, meterH);
             
-            const lWidth = (lPct / 100) * 590;
-            const lGrad = ctx.createLinearGradient(635, 0, 1225, 0);
+            const lPct = dbToPct(lDb);
+            const lWidth = (lPct / 100) * meterW;
+            const lGrad = ctx.createLinearGradient(rightX, 0, rightX + meterW, 0);
             lGrad.addColorStop(0, '#2ed573');
             lGrad.addColorStop(0.6, '#2ed573');
             lGrad.addColorStop(0.8, '#ffa502');
             lGrad.addColorStop(1, '#ff4757');
             ctx.fillStyle = lGrad;
-            ctx.fillRect(635, yOffset + 95, lWidth, 32);
+            ctx.fillRect(rightX + Math.floor(scale * 15), meterY + 10, lWidth, meterH);
             
-            // CHANNEL R - větší
+            // CHANNEL R
+            const meterY2 = meterY + Math.floor(scale * 80);
+            
             ctx.fillStyle = '#666';
-            ctx.font = 'bold 16px Arial';
+            ctx.font = `bold ${Math.floor(scale * 16)}px Arial`;
             ctx.textAlign = 'left';
-            ctx.fillText('CHANNEL R', 635, yOffset + 160);
+            ctx.fillText('R', rightX + Math.floor(scale * 15), meterY2);
             ctx.fillStyle = '#4ecdc4';
             ctx.textAlign = 'right';
-            ctx.fillText(rDb.toFixed(1) + ' dB', 1235, yOffset + 160);
+            ctx.fillText(rDb.toFixed(1) + ' dB', rightX + rightW - Math.floor(scale * 15), meterY2);
             
             ctx.fillStyle = '#000';
-            ctx.fillRect(635, yOffset + 175, 590, 32);
+            ctx.fillRect(rightX + Math.floor(scale * 15), meterY2 + 10, meterW, meterH);
             ctx.strokeStyle = '#555';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(635, yOffset + 175, 590, 32);
+            ctx.strokeRect(rightX + Math.floor(scale * 15), meterY2 + 10, meterW, meterH);
             
-            const rWidth = (rPct / 100) * 590;
-            const rGrad = ctx.createLinearGradient(635, 0, 1225, 0);
+            const rPct = dbToPct(rDb);
+            const rWidth = (rPct / 100) * meterW;
+            const rGrad = ctx.createLinearGradient(rightX, 0, rightX + meterW, 0);
             rGrad.addColorStop(0, '#2ed573');
-            rGrad.addColorStop(0.6, '#2ed573');
+            lGrad.addColorStop(0.6, '#2ed573');
             rGrad.addColorStop(0.8, '#ffa502');
             rGrad.addColorStop(1, '#ff4757');
             ctx.fillStyle = rGrad;
-            ctx.fillRect(635, yOffset + 175, rWidth, 32);
+            ctx.fillRect(rightX + Math.floor(scale * 15), meterY2 + 10, rWidth, meterH);
             
-            // PEAK INDICATOR - větší
+            // PEAK
             const peakVal = document.getElementById('peak-indicator')?.textContent || '0';
+            const peakY = meterY2 + Math.floor(scale * 80);
+            
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.fillRect(635, yOffset + 225, 590, 50);
+            ctx.fillRect(rightX + Math.floor(scale * 15), peakY, meterW, Math.floor(scale * 50));
             ctx.fillStyle = '#4ecdc4';
-            ctx.fillRect(635, yOffset + 225, 4, 50);
+            ctx.fillRect(rightX + Math.floor(scale * 15), peakY, 4, Math.floor(scale * 50));
             
             ctx.fillStyle = '#888';
-            ctx.font = '15px Arial';
+            ctx.font = `${Math.floor(scale * 15)}px Arial`;
             ctx.textAlign = 'left';
-            ctx.fillText('⚠️ PEAK INDICATOR', 645, yOffset + 245);
+            ctx.fillText('⚠️ PEAK', rightX + Math.floor(scale * 25), peakY + Math.floor(scale * 20));
             
             ctx.fillStyle = '#4ecdc4';
-            ctx.font = 'bold 20px Arial';
+            ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'right';
-            ctx.fillText(peakVal, 1215, yOffset + 260);
+            ctx.fillText(peakVal, rightX + meterW, peakY + Math.floor(scale * 35));
             
-            // FOOTER - větší
+            // FOOTER
             ctx.fillStyle = '#2ed573';
-            ctx.font = 'bold 18px Arial';
+            ctx.font = `bold ${Math.floor(scale * 18)}px Arial`;
             ctx.textAlign = 'center';
-            ctx.fillText('● FULL SYNC AKTIVNÍ - WARP 9.99 - 720p HD @ 60 FPS', 640, 700);
+            ctx.fillText(`● WARP 9.99 - ${currentQuality} @ ${quality.fps} FPS`, w / 2, h - Math.floor(scale * 20));
             
             pipAnimationFrame = requestAnimationFrame(renderPiPCanvas);
         }
         
         renderPiPCanvas();
         
-        // 5. AKTIVACE PiP
+        // AKTIVACE PiP
         console.log('🎬 Spouštím requestPictureInPicture()...');
+        await pipVideo.requestPictureInPicture();
         
-        const pipPromise = pipVideo.requestPictureInPicture();
-        console.log('├─ Promise vytvořen:', pipPromise);
+        console.log('✅✅✅ USS PROMETHEUS: PiP AKTIVOVÁN!');
         
-        await pipPromise;
-        
-        console.log('✅✅✅ USS PROMETHEUS: PiP AKTIVOVÁN ÚSPĚŠNĚ!');
-        console.log('├─ document.pictureInPictureElement:', document.pictureInPictureElement);
-        console.log('└─ pipVideo:', pipVideo);
-        
-        // Po aktivaci skryjeme debug video
         pipVideo.style.display = 'none';
         
-        alert('✅ PiP okno aktivováno!\n\n🛸 Mělo by být viditelné jako plovoucí okno.\n\nPokud ho nevidíš, zkontroluj:\n- Pravý dolní roh obrazovky\n- Minimalizované aplikace\n- Notifikační panel (Android)');
+        // UI S NASTAVENÍM KVALITY
+        showQualitySelector();
         
-        // Detekce zavření PiP
         pipVideo.addEventListener('leavepictureinpicture', () => {
-            console.log('🔔 PiP uzavřeno uživatelem');
+            console.log('🔔 PiP uzavřeno');
             closePiPWindow();
         }, { once: true });
         
     } catch (error) {
         console.error('❌ PiP error:', error);
-        
-        let message = 'PiP se nepodařilo aktivovat!';
-        if (error.name === 'NotAllowedError') {
-            message = '⚠️ PiP bylo blokováno.\n\nPokud jsi na iOS, zkus:\n1. Otevřít video v Safari\n2. Použít nativní PiP ovládání';
-        } else if (error.name === 'NotSupportedError') {
-            message = '⚠️ Tvůj prohlížeč nepodporuje PiP.\n\nZkus Chrome 90+ nebo Safari na iOS.';
-        }
-        
-        alert(message + '\n\nChyba: ' + error.message);
+        alert('⚠️ PiP chyba: ' + error.message);
         closePiPWindow();
     }
 };
 
-// 🔒 FUNKCE PRO ZAVŘENÍ PiP
+// 🎨 QUALITY SELECTOR UI
+function showQualitySelector() {
+    const existing = document.getElementById('pip-quality-selector');
+    if (existing) existing.remove();
+    
+    const selector = document.createElement('div');
+    selector.id = 'pip-quality-selector';
+    selector.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(26, 26, 46, 0.95);
+        border: 2px solid #4ecdc4;
+        border-radius: 8px;
+        padding: 15px;
+        z-index: 999998;
+        font-family: Arial, sans-serif;
+        color: #fff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    `;
+    
+    selector.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span style="font-weight: bold; color: #ff6b6b;">⚙️ KVALITA PiP</span>
+            <button onclick="document.getElementById('pip-quality-selector').remove()" style="background: #ff6b6b; border: none; color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">×</button>
+        </div>
+        <select id="pip-quality-select" style="width: 100%; padding: 8px; background: #0f3460; color: #fff; border: 1px solid #4ecdc4; border-radius: 4px; cursor: pointer; font-size: 14px;">
+            ${Object.keys(QUALITY_PRESETS).map(key => 
+                `<option value="${key}" ${key === currentQuality ? 'selected' : ''}>${QUALITY_PRESETS[key].label}</option>`
+            ).join('')}
+        </select>
+        <div style="margin-top: 10px; font-size: 11px; color: #888;">
+            Kvalita se změní okamžitě
+        </div>
+    `;
+    
+    document.body.appendChild(selector);
+    
+    document.getElementById('pip-quality-select').onchange = async (e) => {
+        currentQuality = e.target.value;
+        console.log('🎬 Kvalita změněna na:', currentQuality);
+        
+        // Okamžitě zavři stávající PiP okno
+        closePiPWindow();
+        
+        // Znovu spusť PiP okno s novou kvalitou
+        // Musíme dát krátkou pauzu, aby se stihlo vše uklidit před novým spuštěním
+        await new Promise(resolve => setTimeout(resolve, 100)); 
+        await document.getElementById('otevirani-pip-up-plovouciho-okna').onclick();
+    };
+}
+
 function closePiPWindow() {
     if (pipAnimationFrame) {
         cancelAnimationFrame(pipAnimationFrame);
@@ -3364,46 +3374,15 @@ function closePiPWindow() {
         pipCanvas = null;
     }
     
-    pipWindow = null;
+    const selector = document.getElementById('pip-quality-selector');
+    if (selector) selector.remove();
     
+    pipWindow = null;
     console.log('🔒 USS PROMETHEUS: PiP zavřeno');
 }
 
-// 🔄 FALLBACK FUNKCE (stejná jako předtím)
 function openFallbackPopup() {
-    pipWindow = window.open('', 'StarfleetMonitor', 'width=720,height=600,resizable=yes');
-    
-    if (!pipWindow) {
-        alert('⚠️ Popup okna jsou blokovány! Povol je v nastavení prohlížeče.');
-        return;
-    }
-
-    pipWindow.document.write(`
-        <html><head>
-        <title>🛸 USS PROMETHEUS - POPUP MODE</title>
-        <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-                background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%); 
-                color: #4ecdc4; 
-                font-family: 'Consolas', monospace; 
-                padding: 12px;
-            }
-            #pip-header {
-                background: rgba(255,159,67,0.2);
-                border: 2px solid #ff9f43;
-                padding: 10px;
-                text-align: center;
-                color: #ff9f43;
-                font-weight: bold;
-                margin-bottom: 12px;
-            }
-        </style></head><body>
-        <div id="pip-header">⚠️ POPUP MODE - PiP není podporován</div>
-        <p style="text-align:center;">Fallback režim aktivní</p>
-        </body></html>
-    `);
-    pipWindow.document.close();
+    alert('⚠️ PiP není podporován!\n\nZkus Chrome 90+ nebo Safari.');
 }
     </script>
 </body>

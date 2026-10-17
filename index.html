@@ -315,7 +315,7 @@ h3{
 
 #visualization {
     width: 100%;
-    height: 200px;
+    height: 320px;
     background: #000;
     border-radius: 10px;
     border: 2px solid var(--lcars-blue);
@@ -862,7 +862,7 @@ class AudioEditor {
         this.ctx = null;
         this.canvasDpr = 1;
         this.canvasCssWidth = 0;
-        this.canvasCssHeight = 200;
+        this.canvasCssHeight = 320;
         
         // 🎚️ Level metering
         this.meter = null;
@@ -1040,7 +1040,7 @@ class AudioEditor {
             // 🖖 HiDPI/Retina scaling - ostrá grafika i na displejích s vyšším DPR
             const dpr = window.devicePixelRatio || 1;
             const cssWidth = this.canvas.offsetWidth || 800;
-            const cssHeight = 200;
+            const cssHeight = 320;
             
             this.canvas.width = Math.round(cssWidth * dpr);
             this.canvas.height = Math.round(cssHeight * dpr);
@@ -1187,13 +1187,15 @@ class AudioEditor {
             this.effects.limiter.connect(this.analyser);
             
             // 🌈 Skutečný FFT analyzátor pro frekvenční spektrum (ne náhražka z waveformu!)
-            this.fftAnalyser = new Tone.Analyser('fft', 256);
-            this.fftAnalyser.smoothing = 0.75;
+            // 🔬 Stejné nastavení jako v LCARS analyzéru: FFT 8192 (4096 binů), smoothing 0.7
+            this.fftAnalyser = new Tone.Analyser('fft', 4096);
+            this.fftAnalyser.smoothing = 0.7;
             this.effects.limiter.connect(this.fftAnalyser);
             
             const spectrumBarCount = 48;
             this.spectrumPeaks = new Array(spectrumBarCount).fill(0);
             this.spectrumPeakVelocity = new Array(spectrumBarCount).fill(0);
+            this.spectrumLevels = new Array(spectrumBarCount).fill(0);
             
             this.updateAllEffects();
             
@@ -1537,150 +1539,211 @@ class AudioEditor {
     startVisualization() {
         if (!this.analyser || !this.canvas) return;
         
-        const peakGravity = 0.18; // zrychlení pádu peak-hold špiček (gravitační efekt)
+        // 🎛️ STEJNÉ NASTAVENÍ JAKO V LCARS ANALYZERU v3.1
+        // 48 logaritmických sloupců 30 Hz - 18 kHz, rozsah -90 až -15 dB,
+        // peak-hold s gravitací, oddělený osciloskop s auto-gainem
+        this.vizCfg = { fmin: 30, fmax: 18000, dbMin: -90, dbMax: -15 };
+        if (!this.spectrumLevels || this.spectrumLevels.length !== this.spectrumPeaks.length) {
+            this.spectrumLevels = new Array(this.spectrumPeaks.length).fill(0);
+        }
+        this.waveGain = 1;
+        this.lastVizTs = 0;
+        
+        const cfg = this.vizCfg;
+        const barCount = this.spectrumPeaks.length;
+        const ratio = Math.pow(cfg.fmax / cfg.fmin, 1 / barCount);
         
         const draw = () => {
             if (!this.isPlaying) return;
             
             this.animationId = requestAnimationFrame(draw);
             
+            const ts = performance.now();
+            const dt = Math.min(0.1, Math.max(0.001, (ts - (this.lastVizTs || ts)) / 1000));
+            this.lastVizTs = ts;
+            const k = dt * 60;
+            
+            const ctx = this.ctx;
             const width = this.canvasCssWidth || this.canvas.offsetWidth;
-            const height = this.canvasCssHeight || 200;
+            const height = this.canvasCssHeight || 320;
             
-            this.ctx.clearRect(0, 0, width, height);
+            ctx.clearRect(0, 0, width, height);
             
-            // ═══ 1) SPEKTRÁLNÍ BARY - reálná FFT data, logaritmicky seskupená ═══
+            const specH = Math.round(height * 0.5);
+            
+            // ═══ 1) SPEKTRUM - horní polovina panelu ═══
             if (this.fftAnalyser && this.spectrumPeaks) {
-                const spectrum = this.fftAnalyser.getValue(); // dB, cca -100 až 0
-                const nyquistBins = spectrum.length;
-                const barCount = this.spectrumPeaks.length;
-                const gap = 2;
-                const barWidth = (width - gap * (barCount - 1)) / barCount;
-                const maxBarHeight = height * 0.85;
-                
-                // 📏 dB mřížka (0 dB nahoře, -100 dB dole) - kreslí se POD sloupce
-                this.ctx.save();
-                this.ctx.lineWidth = 1;
-                this.ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-                for (const frac of [0.25, 0.5, 0.75]) {
-                    const gy = Math.round(height - frac * maxBarHeight) + 0.5;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(0, gy);
-                    this.ctx.lineTo(width, gy);
-                    this.ctx.stroke();
-                }
-                this.ctx.restore();
+                const spectrum = this.fftAnalyser.getValue(); // dB
+                const binHz = Tone.context.sampleRate / (spectrum.length * 2);
                 
                 for (let i = 0; i < barCount; i++) {
-                    // Kvadratické (ne lineární) rozložení binů - basy dostanou víc "místa",
-                    // věrněji odpovídá tomu, jak spektrum vnímá lidské ucho
-                    const t0 = Math.pow(i / barCount, 2);
-                    const t1 = Math.pow((i + 1) / barCount, 2);
-                    const idxStart = Math.floor(t0 * nyquistBins);
-                    const idxEnd = Math.max(idxStart + 1, Math.floor(t1 * nyquistBins));
+                    const f0 = cfg.fmin * Math.pow(ratio, i);
+                    const f1 = f0 * ratio;
+                    const b0 = Math.min(spectrum.length - 1, Math.floor(f0 / binHz));
+                    const b1 = Math.min(spectrum.length - 1, Math.max(b0 + 1, Math.ceil(f1 / binHz)));
                     
-                    let maxDb = -100;
-                    for (let j = idxStart; j < idxEnd && j < nyquistBins; j++) {
-                        if (spectrum[j] > maxDb) maxDb = spectrum[j];
+                    let maxDb = -120;
+                    for (let b = b0; b <= b1; b++) {
+                        if (spectrum[b] > maxDb) maxDb = spectrum[b];
                     }
                     
-                    const norm = Math.min(1, Math.max(0, (maxDb + 100) / 100));
-                    const barHeight = norm * maxBarHeight;
-                    const x = i * (barWidth + gap);
-                    const y = height - barHeight;
+                    const target = Math.min(1, Math.max(0, (maxDb - cfg.dbMin) / (cfg.dbMax - cfg.dbMin)));
+                    const prev = this.spectrumLevels[i];
+                    const lvl = target > prev ? target : prev * 0.82 + target * 0.18;
+                    this.spectrumLevels[i] = lvl;
                     
-                    // Peak-hold špička s gravitačním pádem
-                    if (barHeight >= this.spectrumPeaks[i]) {
-                        this.spectrumPeaks[i] = barHeight;
+                    // Peak-hold s gravitačním pádem
+                    if (lvl >= this.spectrumPeaks[i]) {
+                        this.spectrumPeaks[i] = lvl;
                         this.spectrumPeakVelocity[i] = 0;
                     } else {
-                        this.spectrumPeakVelocity[i] += peakGravity;
-                        this.spectrumPeaks[i] = Math.max(0, this.spectrumPeaks[i] - this.spectrumPeakVelocity[i]);
-                    }
-                    
-                    // Barva podle frekvenčního pásma (LCARS spektrum: fialová → modrá → gold → oranžová),
-                    // navíc gradient podle hlasitosti (tmavší dole, plný tón nahoře, špička dosvítí do červena)
-                    const bandT = i / barCount;
-                    const bandLo = bandT < 0.25 ? '#5B4A73'
-                                 : bandT < 0.55 ? '#2F5978'
-                                 : bandT < 0.8  ? '#8A6F1E'
-                                 : '#8A4E10';
-                    const bandHi = bandT < 0.25 ? '#C297D8'
-                                 : bandT < 0.55 ? '#6FA8DC'
-                                 : bandT < 0.8  ? '#FFD34D'
-                                 : '#FF9F1C';
-                    const grad = this.ctx.createLinearGradient(0, height, 0, height - maxBarHeight);
-                    grad.addColorStop(0, bandLo);
-                    grad.addColorStop(0.55, bandHi);
-                    grad.addColorStop(0.9, bandHi);
-                    grad.addColorStop(1, '#ff4757');
-                    
-                    this.ctx.fillStyle = grad;
-                    this.ctx.fillRect(x, y, barWidth, barHeight);
-                    
-                    // Peak-hold čárka (bílá, pomalu padá)
-                    if (this.spectrumPeaks[i] > 1) {
-                        const peakY = height - this.spectrumPeaks[i];
-                        this.ctx.fillStyle = '#ffffff';
-                        this.ctx.fillRect(x, peakY - 2, barWidth, 2);
+                        this.spectrumPeakVelocity[i] += 0.001 * k;
+                        this.spectrumPeaks[i] = Math.max(0, this.spectrumPeaks[i] - this.spectrumPeakVelocity[i] * k);
                     }
                 }
                 
-                // 🏷️ dB popisky až NAD sloupci, na tmavém podkladu, ať je nic nezakrývá
-                this.ctx.save();
-                this.ctx.font = '10px "JetBrains Mono", Consolas, monospace';
-                this.ctx.textAlign = 'left';
-                for (const frac of [0.25, 0.5, 0.75]) {
-                    const gy = Math.round(height - frac * maxBarHeight) + 0.5;
-                    const txt = `${Math.round(-100 + frac * 100)} dB`;
-                    const tw = this.ctx.measureText(txt).width;
-                    this.ctx.fillStyle = 'rgba(5,5,7,0.75)';
-                    this.ctx.fillRect(1, gy - 13, tw + 6, 12);
-                    this.ctx.fillStyle = '#8a8a8a';
-                    this.ctx.fillText(txt, 4, gy - 3);
-                }
-                this.ctx.restore();
+                this.drawSpectrumBars(0, 0, width, specH);
             }
             
-            // ═══ 2) OSCILOSKOP - waveform se svitem, v horním pásmu plátna ═══
+            // ═══ oddělovač ═══
+            ctx.save();
+            ctx.strokeStyle = '#26282e';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, specH + 4.5);
+            ctx.lineTo(width, specH + 4.5);
+            ctx.stroke();
+            ctx.restore();
+            
+            // ═══ 2) OSCILOSKOP - spodní polovina, vlastní pruh se svitem a auto-gainem ═══
             const waveform = this.analyser.getValue();
             
-            // 🎚️ AUTO-GAIN: tiché pasáže se zvětší (až 8x), hlasité se okamžitě stáhnou
+            // Auto-gain: tiché pasáže se zvětší (až 12x), hlasité se okamžitě stáhnou
             let waveMax = 0;
             for (let i = 0; i < waveform.length; i++) {
                 const a = Math.abs(waveform[i]);
                 if (a > waveMax) waveMax = a;
             }
-            if (!this.waveGain) this.waveGain = 1;
-            const waveTarget = Math.min(8, Math.max(1, 0.9 / Math.max(waveMax, 0.02)));
+            const waveTarget = Math.min(12, Math.max(1, 0.75 / Math.max(waveMax, 0.015)));
             this.waveGain = waveTarget < this.waveGain
                 ? waveTarget
                 : this.waveGain + (waveTarget - this.waveGain) * 0.04;
             
-            this.ctx.save();
-            this.ctx.shadowColor = '#FFD34D';
-            this.ctx.shadowBlur = 8;
-            this.ctx.beginPath();
-            this.ctx.strokeStyle = '#FFD34D';
-            this.ctx.lineWidth = 2;
+            const top = specH + 8;
+            const laneH = height - top - 2;
+            const cy = top + laneH / 2;
+            const half = Math.max(2, laneH / 2 - 2);
+            const step = width / (waveform.length - 1);
             
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, cy);
+            ctx.lineTo(width, cy);
+            ctx.stroke();
+            
+            ctx.shadowColor = '#FFD34D';
+            ctx.shadowBlur = 6;
+            ctx.strokeStyle = '#FFD34D';
+            ctx.lineWidth = 1.6;
+            ctx.beginPath();
             for (let i = 0; i < waveform.length; i++) {
-                const x = (i / waveform.length) * width;
-                const sample = Math.max(-1, Math.min(1, waveform[i] * this.waveGain));
-                const y = ((sample + 1) / 2) * (height * 0.4) + height * 0.05;
-                
-                if (i === 0) {
-                    this.ctx.moveTo(x, y);
-                } else {
-                    this.ctx.lineTo(x, y);
-                }
+                const v = Math.max(-1, Math.min(1, waveform[i] * this.waveGain));
+                const px = i * step;
+                const py = cy - v * half;
+                if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
             }
+            ctx.stroke();
+            ctx.restore();
             
-            this.ctx.stroke();
-            this.ctx.restore();
+            ctx.save();
+            ctx.fillStyle = '#FFD34D';
+            ctx.font = '600 11px "JetBrains Mono", Consolas, monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('VÝSTUP', 6, top + 12);
+            ctx.restore();
         };
         
         draw();
+    }
+    
+    // 🎨 Vykreslení spektra (stejné jako v LCARS analyzéru): mřížka pod sloupci,
+    // dB popisky nad sloupci, frekvenční osa dole
+    drawSpectrumBars(x, y, w, h) {
+        const ctx = this.ctx;
+        const cfg = this.vizCfg;
+        const n = this.spectrumPeaks.length;
+        const gap = 2;
+        const labelH = 16;
+        const plotH = Math.max(10, h - labelH);
+        const maxBar = plotH * 0.95;
+        const baseY = y + plotH;
+        const bw = Math.max(1, (w - gap * (n - 1)) / n);
+        
+        ctx.save();
+        ctx.font = '10px "JetBrains Mono", Consolas, monospace';
+        
+        // mřížka
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        for (const frac of [0.25, 0.5, 0.75]) {
+            const gy = Math.round(baseY - frac * maxBar) + 0.5;
+            ctx.beginPath();
+            ctx.moveTo(x, gy);
+            ctx.lineTo(x + w, gy);
+            ctx.stroke();
+        }
+        
+        // 4 gradienty podle pásma (fialová → modrá → zlatá → oranžová, špička do červena)
+        const bandLo = ['#5B4A73', '#2F5978', '#8A6F1E', '#8A4E10'];
+        const bandHi = ['#C297D8', '#6FA8DC', '#FFD34D', '#FF9F1C'];
+        const grads = bandLo.map((lo, idx) => {
+            const g = ctx.createLinearGradient(0, baseY, 0, baseY - maxBar);
+            g.addColorStop(0, lo);
+            g.addColorStop(0.55, bandHi[idx]);
+            g.addColorStop(0.9, bandHi[idx]);
+            g.addColorStop(1, '#ff4757');
+            return g;
+        });
+        
+        for (let i = 0; i < n; i++) {
+            const t = i / n;
+            const band = t < 0.25 ? 0 : t < 0.55 ? 1 : t < 0.8 ? 2 : 3;
+            const bh = this.spectrumLevels[i] * maxBar;
+            const bx = x + i * (bw + gap);
+            ctx.fillStyle = grads[band];
+            ctx.fillRect(bx, baseY - bh, bw, bh);
+            
+            const ph = this.spectrumPeaks[i] * maxBar;
+            if (ph > 1) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(bx, baseY - ph - 2, bw, 2);
+            }
+        }
+        
+        // dB popisky až nad sloupci, na tmavém podkladu
+        ctx.textAlign = 'left';
+        for (const frac of [0.25, 0.5, 0.75]) {
+            const gy = Math.round(baseY - frac * maxBar) + 0.5;
+            const txt = `${Math.round(cfg.dbMin + frac * (cfg.dbMax - cfg.dbMin))} dB`;
+            const tw = ctx.measureText(txt).width;
+            ctx.fillStyle = 'rgba(5,5,7,0.75)';
+            ctx.fillRect(x + 1, gy - 13, tw + 6, 12);
+            ctx.fillStyle = '#8a8a8a';
+            ctx.fillText(txt, x + 4, gy - 3);
+        }
+        
+        // popisky frekvencí
+        ctx.fillStyle = '#777';
+        ctx.textAlign = 'center';
+        const span = Math.log(cfg.fmax / cfg.fmin);
+        for (const f of [50, 100, 200, 500, 1000, 2000, 5000, 10000]) {
+            if (f < cfg.fmin || f > cfg.fmax) continue;
+            const px = x + (Math.log(f / cfg.fmin) / span) * w;
+            ctx.fillText(f >= 1000 ? `${f / 1000}k` : `${f}`, px, y + h - 3);
+        }
+        ctx.restore();
     }
     
     stopVisualization() {
@@ -1691,12 +1754,13 @@ class AudioEditor {
         
         if (this.ctx && this.canvas) {
             const width = this.canvasCssWidth || this.canvas.offsetWidth;
-            const height = this.canvasCssHeight || 200;
+            const height = this.canvasCssHeight || 320;
             this.ctx.clearRect(0, 0, width, height);
         }
         
         if (this.spectrumPeaks) this.spectrumPeaks.fill(0);
         if (this.spectrumPeakVelocity) this.spectrumPeakVelocity.fill(0);
+        if (this.spectrumLevels) this.spectrumLevels.fill(0);
         this.waveGain = 1;
     }
     

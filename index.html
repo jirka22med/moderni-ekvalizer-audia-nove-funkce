@@ -1558,6 +1558,19 @@ class AudioEditor {
                 const barWidth = (width - gap * (barCount - 1)) / barCount;
                 const maxBarHeight = height * 0.85;
                 
+                // 📏 dB mřížka (0 dB nahoře, -100 dB dole) - kreslí se POD sloupce
+                this.ctx.save();
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+                for (const frac of [0.25, 0.5, 0.75]) {
+                    const gy = Math.round(height - frac * maxBarHeight) + 0.5;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, gy);
+                    this.ctx.lineTo(width, gy);
+                    this.ctx.stroke();
+                }
+                this.ctx.restore();
+                
                 for (let i = 0; i < barCount; i++) {
                     // Kvadratické (ne lineární) rozložení binů - basy dostanou víc "místa",
                     // věrněji odpovídá tomu, jak spektrum vnímá lidské ucho
@@ -1612,10 +1625,37 @@ class AudioEditor {
                         this.ctx.fillRect(x, peakY - 2, barWidth, 2);
                     }
                 }
+                
+                // 🏷️ dB popisky až NAD sloupci, na tmavém podkladu, ať je nic nezakrývá
+                this.ctx.save();
+                this.ctx.font = '10px "JetBrains Mono", Consolas, monospace';
+                this.ctx.textAlign = 'left';
+                for (const frac of [0.25, 0.5, 0.75]) {
+                    const gy = Math.round(height - frac * maxBarHeight) + 0.5;
+                    const txt = `${Math.round(-100 + frac * 100)} dB`;
+                    const tw = this.ctx.measureText(txt).width;
+                    this.ctx.fillStyle = 'rgba(5,5,7,0.75)';
+                    this.ctx.fillRect(1, gy - 13, tw + 6, 12);
+                    this.ctx.fillStyle = '#8a8a8a';
+                    this.ctx.fillText(txt, 4, gy - 3);
+                }
+                this.ctx.restore();
             }
             
             // ═══ 2) OSCILOSKOP - waveform se svitem, v horním pásmu plátna ═══
             const waveform = this.analyser.getValue();
+            
+            // 🎚️ AUTO-GAIN: tiché pasáže se zvětší (až 8x), hlasité se okamžitě stáhnou
+            let waveMax = 0;
+            for (let i = 0; i < waveform.length; i++) {
+                const a = Math.abs(waveform[i]);
+                if (a > waveMax) waveMax = a;
+            }
+            if (!this.waveGain) this.waveGain = 1;
+            const waveTarget = Math.min(8, Math.max(1, 0.9 / Math.max(waveMax, 0.02)));
+            this.waveGain = waveTarget < this.waveGain
+                ? waveTarget
+                : this.waveGain + (waveTarget - this.waveGain) * 0.04;
             
             this.ctx.save();
             this.ctx.shadowColor = '#FFD34D';
@@ -1626,7 +1666,8 @@ class AudioEditor {
             
             for (let i = 0; i < waveform.length; i++) {
                 const x = (i / waveform.length) * width;
-                const y = ((waveform[i] + 1) / 2) * (height * 0.4) + height * 0.05;
+                const sample = Math.max(-1, Math.min(1, waveform[i] * this.waveGain));
+                const y = ((sample + 1) / 2) * (height * 0.4) + height * 0.05;
                 
                 if (i === 0) {
                     this.ctx.moveTo(x, y);
@@ -1656,6 +1697,7 @@ class AudioEditor {
         
         if (this.spectrumPeaks) this.spectrumPeaks.fill(0);
         if (this.spectrumPeakVelocity) this.spectrumPeakVelocity.fill(0);
+        this.waveGain = 1;
     }
     
     // 🚀 ENHANCED DOWNLOAD FUNCTION - používá Quality Enhancer

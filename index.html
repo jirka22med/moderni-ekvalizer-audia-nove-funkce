@@ -1,289 +1,393 @@
 <!DOCTYPE html>
 <html lang="cs">
-    <link rel="icon" href="https://img41.rajce.idnes.cz/d4102/19/19244/19244630_db82ad174937335b1a151341387b7af2/images/image_192x192_2.jpg?ver=0" type="image/png">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48dGV4dCB5PSIuOWVtIiBmb250LXNpemU9IjkwIj7wn46a77iPPC90ZXh0Pjwvc3ZnPg==">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <title>🎵 Audio Editor - Hvězdná flotila 🚀</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
-            color: #fff;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .section h2 {
-            color: #4ecdc4;
-            margin-top: 0;
-            font-size: 1.5em;
-            border-bottom: 2px solid #4ecdc4;
-            padding-bottom: 10px;
-        }
-        
-        .input-file {
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px dashed #4ecdc4;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .input-file:hover {
-            background: rgba(78, 205, 196, 0.2);
-            border-color: #ff6b6b;
-        }
-        
-        .audio-player {
-            width: 100%;
-            margin-bottom: 15px;
-            height: 50px;
-        }
-        
-        .eq-sliders {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-        }
-        
-        .eq-slider {
-            text-align: center;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-        
-        .eq-slider label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #4ecdc4;
-        }
-        
-        .slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 6px;
-            border-radius: 5px;
-            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
-            outline: none;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-            cursor: pointer;
-        }
-        
-        .slider:hover {
-            opacity: 1;
-        }
-        
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-        }
-        
-        .slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            border: none;
-        }
-        
-        .effects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .effect-control {
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .effect-control label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #ff6b6b;
-        }
-        
-        .button {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            border: none;
-            color: white;
-            padding: 15px 25px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 8px 4px;
-            cursor: pointer;
-            border-radius: 25px;
-            transition: all 0.3s ease;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-        
-        .button:active {
-            transform: translateY(0);
-        }
-        
-        .button.playing {
-            background: linear-gradient(45deg, #ff4757, #2ed573);
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
-        }
-        
-        #visualization {
-            width: 100%;
-            height: 200px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 10px;
-            border: 2px solid #4ecdc4;
-        }
-        
-        .status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-        }
-        
-        .status.success {
-            background: rgba(46, 213, 115, 0.2);
-            border: 1px solid #2ed573;
-            color: #2ed573;
-        }
-        
-        .status.error {
-            background: rgba(255, 71, 87, 0.2);
-            border: 1px solid #ff4757;
-            color: #ff4757;
-        }
-        
-        .status.info {
-            background: rgba(78, 205, 196, 0.2);
-            border: 1px solid #4ecdc4;
-            color: #4ecdc4;
-        }
-        
-        .value-display {
-            font-size: 12px;
-            color: #ccc;
-            margin-top: 5px;
-        }
-        
-        
-        /* 🛡️ POKROČILÉ EFEKTY - NEUTRALNÍ CSS STYLY */
+/* =================================================================
+   AUDIO EDITOR — HVĚZDNÁ FLOTILA
+   LCARS-inspired redesign — CSS vrstva, funkce beze změny.
+   ================================================================= */
 
-/* Hlavní kontejner pro pokročilé efekty */
-#advanced-effects-section {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 20px 0;
-    color: #ffffff;
+:root{
+  --lcars-black:   #000000;
+  --lcars-panel:   #0b0b0f;
+  --lcars-panel-2: #111318;
+  --lcars-line:    #26282e;
+
+  --lcars-orange:  #FF9F1C;
+  --lcars-peach:   #FFCC99;
+  --lcars-violet:  #C297D8;
+  --lcars-blue:    #6FA8DC;
+  --lcars-gold:    #FFD34D;
+  --lcars-red:     #CC6666;
+
+  --meter-ok:      #2ed573;
+  --meter-warn:    #ffa502;
+  --meter-peak:    #ff4757;
+
+  --glow-blue:     rgba(111,168,220,.35);
+
+  --text-main:     #F2EFEA;
+  --text-dim:      #9a9a9a;
+
+  --font-display: 'Antonio', 'Arial Narrow', Impact, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+
+  --radius-pill: 999px;
 }
 
-/* Nadpisy sekcí */
+*{ box-sizing: border-box; }
+
+body {
+    font-family: var(--font-mono);
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background: radial-gradient(ellipse at top left, #0d0d14 0%, #000000 58%) fixed, var(--lcars-black);
+    color: var(--text-main);
+    min-height: 100vh;
+}
+@media (prefers-reduced-motion: reduce){
+    *{ animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+a:focus-visible, button:focus-visible, input:focus-visible, .button:focus-visible{
+    outline: 2px solid var(--lcars-gold);
+    outline-offset: 2px;
+}
+
+/* --- LCARS decorative rail: vodorovny pruh na konci stranky --- */
+.lcars-rail{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 10px;
+    margin-top: 34px;
+    background: #000;
+    border-top: 1px solid #1a1a1a;
+}
+.lcars-rail-block{ width: 30px; height: 30px; border-radius: 8px; }
+.lcars-rail-block--orange{ background: var(--lcars-orange); }
+.lcars-rail-block--violet{ background: var(--lcars-violet); }
+.lcars-rail-block--blue{ background: var(--lcars-blue); }
+.lcars-rail-block--peach{ background: var(--lcars-peach); }
+.lcars-rail-label{
+    font-family: var(--font-mono);
+    font-size: .72em;
+    letter-spacing: .12em;
+    color: #555;
+    margin-left: 8px;
+}
+
+h3{
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--lcars-gold);
+    margin: 20px 0 12px;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+}
+
+.header {
+    text-align: left;
+    margin-bottom: 26px;
+    padding: 22px 34px;
+    background: linear-gradient(90deg, var(--lcars-orange) 0%, var(--lcars-orange) 62%, var(--lcars-peach) 100%);
+    border-radius: 0 60px 60px 0;
+    box-shadow: none;
+}
+
+.header h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.5em;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    text-shadow: none;
+    color: #000;
+}
+.header p{
+    margin: 6px 0 0;
+    font-family: var(--font-mono);
+    font-size: .85em;
+    color: #1a1200;
+    opacity: .85;
+}
+
+.section {
+    margin-bottom: 22px;
+    padding: 0 22px 22px;
+    background: var(--lcars-panel);
+    border-radius: 0 0 20px 20px;
+    border: none;
+}
+
+.section h2 {
+    color: #000;
+    margin: 0 -22px 20px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.3em;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    background: var(--lcars-violet);
+    border-bottom: none;
+    padding: 10px 26px;
+    border-radius: 0 999px 999px 0;
+    width: fit-content;
+}
+
+.input-file {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #111;
+    border: 2px dashed var(--lcars-orange);
+    border-radius: 14px;
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+}
+
+.input-file:hover {
+    background: rgba(255, 159, 28, .08);
+    border-color: var(--lcars-violet);
+}
+
+.audio-player {
+    width: 100%;
+    margin-bottom: 15px;
+    height: 50px;
+}
+
+.eq-sliders {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 18px;
+    background: #050505;
+    border-radius: 14px;
+    border: 1px solid var(--lcars-line);
+}
+
+.eq-slider {
+    text-align: center;
+    padding: 10px 6px;
+    background: var(--lcars-panel-2);
+    border-radius: 8px;
+    border-top: 3px solid var(--lcars-blue);
+}
+/* prvních 5 pásem = nová sub-bass sekce, zbylých 8 = původní pásma */
+.eq-slider:nth-child(-n+5){ border-top-color: var(--lcars-violet); }
+.eq-slider:nth-child(-n+5) label{ color: var(--lcars-violet); }
+
+.eq-slider label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: .82em;
+    color: var(--lcars-blue);
+}
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: #2a2a2a;
+    outline: none;
+    opacity: .9;
+    transition: opacity .2s;
+    cursor: pointer;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--lcars-gold);
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--lcars-gold);
+    box-shadow: none;
+    cursor: pointer;
+    border: none;
+}
+
+.effects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.effect-control {
+    padding: 15px;
+    background: var(--lcars-panel-2);
+    border-radius: 8px;
+    border: none;
+    border-left: 3px solid var(--lcars-orange);
+}
+
+.effect-control label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--lcars-orange);
+    font-size: .85em;
+}
+
+.button {
+    background: var(--lcars-blue);
+    border: none;
+    color: #000;
+    padding: 14px 26px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 16px;
+    margin: 8px 4px;
+    cursor: pointer;
+    border-radius: var(--radius-pill);
+    transition: filter .15s ease, transform .1s ease;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.12);
+    box-shadow: none;
+}
+
+.button:active {
+    transform: translateY(0);
+    filter: brightness(.92);
+}
+
+.button.playing {
+    background: var(--meter-ok);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(46, 213, 115, .6); }
+    70% { box-shadow: 0 0 0 12px rgba(46, 213, 115, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(46, 213, 115, 0); }
+}
+
+#visualization {
+    width: 100%;
+    height: 200px;
+    background: #000;
+    border-radius: 10px;
+    border: 2px solid var(--lcars-blue);
+}
+
+.status {
+    padding: 10px 18px;
+    margin: 10px 0;
+    border-radius: var(--radius-pill);
+    text-align: center;
+    font-weight: 700;
+}
+
+.status.success {
+    background: rgba(46, 213, 115, .12);
+    border: 1px solid var(--meter-ok);
+    color: var(--meter-ok);
+}
+
+.status.error {
+    background: rgba(255, 71, 87, .12);
+    border: 1px solid var(--meter-peak);
+    color: var(--meter-peak);
+}
+
+.status.info {
+    background: rgba(111, 168, 220, .12);
+    border: 1px solid var(--lcars-blue);
+    color: var(--lcars-blue);
+}
+
+.value-display {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 5px;
+}
+
+
+/* 🛡️ POKROČILÉ EFEKTY */
+
+#advanced-effects-section {
+    background: var(--lcars-panel);
+    border: 1px solid var(--lcars-line);
+    border-radius: 0 20px 20px 0;
+    padding: 20px;
+    margin: 20px 0;
+    color: var(--text-main);
+}
+
 #advanced-effects-section h3 {
-    color: #00ff00;
+    color: var(--lcars-gold);
     font-size: 18px;
-    font-weight: bold;
     margin: 20px 0 15px 0;
     padding-bottom: 8px;
-    border-bottom: 2px solid #444;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    border-bottom: 2px solid var(--lcars-line);
 }
 
 #advanced-effects-section h3:first-child {
     margin-top: 0;
 }
 
-/* Kontejner pro jeden ovládací prvek */
 .advanced-control {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin: 15px 0;
-    padding: 10px;
-    background: #333;
-    border: 1px solid #555;
+    padding: 10px 14px;
+    background: var(--lcars-panel-2);
+    border: 1px solid var(--lcars-line);
     border-radius: 6px;
 }
 
-/* Styly pro labely */
 .advanced-control label {
     font-size: 14px;
     font-weight: 500;
@@ -294,53 +398,49 @@
     align-items: center;
 }
 
-/* Hodnoty parametrů */
 .parameter-value {
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-weight: bold;
-    color: #00ff00;
-    background: #1a1a1a;
+    color: var(--lcars-gold);
+    background: #000;
     padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid #00ff00;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--lcars-gold);
     min-width: 60px;
     text-align: center;
 }
 
-/* Styly pro slidery */
 .advanced-control input[type="range"] {
     flex: 1;
     margin-left: 20px;
     height: 6px;
     border-radius: 3px;
-    background: #555;
+    background: #2a2a2a;
     outline: none;
     border: none;
 }
 
-/* Slider track */
 .advanced-control input[type="range"]::-webkit-slider-track {
     height: 15px;
     border-radius: 3px;
-    background: #555;
+    background: #2a2a2a;
     border: none;
 }
 
 .advanced-control input[type="range"]::-moz-range-track {
     height: 6px;
     border-radius: 3px;
-    background: #555;
+    background: #2a2a2a;
     border: none;
 }
 
-/* Slider thumb */
 .advanced-control input[type="range"]::-webkit-slider-thumb {
     appearance: none;
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #00ff00;
-    border: 2px solid #ffffff;
+    background: var(--lcars-gold);
+    border: 2px solid #000;
     cursor: pointer;
 }
 
@@ -348,105 +448,66 @@
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #00ff00;
-    border: 2px solid #ffffff;
+    background: var(--lcars-gold);
+    border: 2px solid #000;
     cursor: pointer;
 }
 
-/* Hover efekty pro slidery */
 .advanced-control input[type="range"]:hover::-webkit-slider-thumb {
-    background: #00cc00;
+    filter: brightness(1.1);
     transform: scale(1.1);
 }
 
 .advanced-control input[type="range"]:hover::-moz-range-thumb {
-    background: #00cc00;
+    filter: brightness(1.1);
     transform: scale(1.1);
 }
 
-/* Specifické styly pro Noise Gate */
-.noise-gate-controls {
-    border-left: 4px solid #ff6b6b;
-}
+.noise-gate-controls { border-left: 4px solid var(--lcars-red); }
+.noise-gate-controls h3 { color: var(--lcars-red); }
+.noise-gate-controls .parameter-value { color: var(--lcars-red); border-color: var(--lcars-red); }
+.noise-gate-controls input[type="range"]::-webkit-slider-thumb { background: var(--lcars-red); }
+.noise-gate-controls input[type="range"]::-moz-range-thumb { background: var(--lcars-red); }
 
-.noise-gate-controls h3 {
-    color: #ff6b6b;
-}
+.multiband-controls { border-left: 4px solid var(--lcars-blue); }
+.multiband-controls h3 { color: var(--lcars-blue); }
+.multiband-controls .parameter-value { color: var(--lcars-blue); border-color: var(--lcars-blue); }
+.multiband-controls input[type="range"]::-webkit-slider-thumb { background: var(--lcars-blue); }
+.multiband-controls input[type="range"]::-moz-range-thumb { background: var(--lcars-blue); }
 
-.noise-gate-controls .parameter-value {
-    color: #ff6b6b;
-    border-color: #ff6b6b;
-}
-
-.noise-gate-controls input[type="range"]::-webkit-slider-thumb {
-    background: #ff6b6b;
-}
-
-.noise-gate-controls input[type="range"]::-moz-range-thumb {
-    background: #ff6b6b;
-}
-
-/* Specifické styly pro Multiband Compressor */
-.multiband-controls {
-    border-left: 4px solid #4dabf7;
-}
-
-.multiband-controls h3 {
-    color: #4dabf7;
-}
-
-.multiband-controls .parameter-value {
-    color: #4dabf7;
-    border-color: #4dabf7;
-}
-
-.multiband-controls input[type="range"]::-webkit-slider-thumb {
-    background: #4dabf7;
-}
-
-.multiband-controls input[type="range"]::-moz-range-thumb {
-    background: #4dabf7;
-}
-
-/* Responzivní design */
 @media (max-width: 768px) {
     .advanced-control {
         flex-direction: column;
         align-items: stretch;
     }
-    
     .advanced-control label {
         margin-bottom: 10px;
         min-width: auto;
     }
-    
     .advanced-control input[type="range"] {
         margin-left: 0;
         margin-top: 10px;
     }
 }
 
-/* Status indikátory */
 .effect-status {
     font-size: 12px;
-    color: #888;
+    color: var(--text-dim);
     font-style: italic;
     margin-top: 5px;
 }
 
 .effect-active .effect-status {
-    color: #00ff00;
+    color: var(--meter-ok);
 }
 
-/* Tooltip styly */
 .advanced-control[title]:hover {
-    background: #3a3a3a;
+    background: #1a1c22;
 }
 
-/* Gruppování ovládacích prvků */
 .control-group {
-    background: #2a2a2a;
-    border: 1px solid #444;
+    background: var(--lcars-panel);
+    border: 1px solid var(--lcars-line);
     border-radius: 6px;
     padding: 15px;
     margin: 10px 0;
@@ -455,15 +516,15 @@
 .control-group:last-child {
     margin-bottom: 0;
 }
-        
-        
-        @keyframes blink {
+
+
+@keyframes blink {
     0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+    51%, 100% { opacity: .3; }
 }
 
 .meter-container .channel-meter canvas {
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, .6);
 }
 
 .peak-section {
@@ -471,11 +532,13 @@
 }
 
 #peak-indicator {
-    transition: all 0.3s ease;
+    transition: all .3s ease;
+    font-family: var(--font-mono);
 }
-    </style>
+</style>
 </head>
 <body>
+<div class="lcars-frame">
     <div class="container">
         <div class="header">
             <h1>🎵 Audio Editor - Hvězdná flotila 🚀</h1>
@@ -641,21 +704,21 @@
         gap: 30px;
         margin: 20px 0;
         padding: 20px;
-        background: rgba(255, 255, 255, 0.1);
+        background: #0b0b0f;
+        border: 1px solid #26282e;
         border-radius: 15px;
-        backdrop-filter: blur(10px);
     ">
         <!-- Levý kanál -->
         <div class="channel-meter" style="text-align: center;">
-            <h3 style="color: white; margin-bottom: 10px;">Levý kanál</h3>
+            <h3 style="color: var(--lcars-gold); margin-bottom: 10px;">Levý kanál</h3>
             <canvas id="left-meter" style="
-                border: 2px solid #333;
+                border: 2px solid var(--lcars-blue);
                 border-radius: 5px;
-                background: #111;
+                background: #050505;
             "></canvas>
             <div id="left-meter-value" style="
-                color: #00ff00;
-                font-family: monospace;
+                color: var(--meter-ok);
+                font-family: var(--font-mono);
                 font-size: 14px;
                 font-weight: bold;
                 margin-top: 10px;
@@ -664,15 +727,15 @@
         
         <!-- Pravý kanál -->
         <div class="channel-meter" style="text-align: center;">
-            <h3 style="color: white; margin-bottom: 10px;">Pravý kanál</h3>
+            <h3 style="color: var(--lcars-gold); margin-bottom: 10px;">Pravý kanál</h3>
             <canvas id="right-meter" style="
-                border: 2px solid #333;
+                border: 2px solid var(--lcars-blue);
                 border-radius: 5px;
-                background: #111;
+                background: #050505;
             "></canvas>
             <div id="right-meter-value" style="
-                color: #00ff00;
-                font-family: monospace;
+                color: var(--meter-ok);
+                font-family: var(--font-mono);
                 font-size: 14px;
                 font-weight: bold;
                 margin-top: 10px;
@@ -681,14 +744,14 @@
         
         <!-- Peak indikátor -->
         <div class="peak-section" style="text-align: center;">
-            <h3 style="color: white; margin-bottom: 20px;">Peak Status</h3>
+            <h3 style="color: var(--lcars-gold); margin-bottom: 20px;">Peak Status</h3>
             <div id="peak-indicator" style="
                 font-size: 18px;
                 font-weight: bold;
                 padding: 15px 20px;
                 border-radius: 10px;
-                background: rgba(0, 0, 0, 0.3);
-                border: 2px solid #333;
+                background: #000;
+                border: 2px solid var(--lcars-gold);
                 min-height: 60px;
                 display: flex;
                 align-items: center;
@@ -701,7 +764,8 @@
                 font-size: 12px;
                 color: #ccc;
                 text-align: left;
-                background: rgba(0, 0, 0, 0.2);
+                background: #000;
+                border: 1px solid #1e1e1e;
                 padding: 10px;
                 border-radius: 5px;
             ">
@@ -730,7 +794,7 @@
         <span id="progress-percent" style="float: right; font-weight: bold;">0%</span>
     </div>
     <div style="width: 100%; height: 20px; background-color: #333; border-radius: 10px; overflow: hidden;">
-        <div id="progress-bar" style="width: 0%; height: 100%; background-color: #ffa500; transition: all 0.3s ease; border-radius: 10px;"></div>
+        <div id="progress-bar" style="width: 0%; height: 100%; background-color: var(--lcars-orange); transition: all 0.3s ease; border-radius: 10px;"></div>
     </div>
 </div>
         <div class="section" id="visualization-section" style="display: none;">
@@ -738,12 +802,20 @@
             <canvas id="visualization"></canvas>
         </div>
     </div>
+    <aside class="lcars-rail" aria-hidden="true">
+        <span class="lcars-rail-block lcars-rail-block--orange"></span>
+        <span class="lcars-rail-block lcars-rail-block--violet"></span>
+        <span class="lcars-rail-block lcars-rail-block--blue"></span>
+        <span class="lcars-rail-block lcars-rail-block--peach"></span>
+        <span class="lcars-rail-label">USS&nbsp;PROMETHEUS&nbsp;/&nbsp;AUDIO-ED</span>
+    </aside>
+</div>
 
     <div id="starfleet-monitor-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; backdrop-filter:blur(5px);">
-    <div id="starfleet-monitor-window" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; max-width:800px; height:80vh; background:#1a1a2e; border:2px solid #4ecdc4; border-radius:15px; padding:20px; overflow-y:auto; box-shadow:0 0 30px rgba(78,205,196,0.3);">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #4ecdc4; padding-bottom:10px; margin-bottom:20px;">
-            <h2 style="margin:0; color:#4ecdc4;">🛰️ LIVE DIAGNOSTIKA FLOTILY</h2>
-            <button id="zavirac-monitoru" style="background:#ff6b6b; border:none; color:white; padding:5px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">ZAVŘÍT</button>
+    <div id="starfleet-monitor-window" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:80%; max-width:800px; height:80vh; background:#0b0b0f; border:2px solid var(--lcars-blue); border-radius:15px; padding:20px; overflow-y:auto; box-shadow:0 0 30px var(--glow-blue);">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--lcars-blue); padding-bottom:10px; margin-bottom:20px;">
+            <h2 style="margin:0; color:var(--lcars-blue);">🛰️ LIVE DIAGNOSTIKA FLOTILY</h2>
+            <button id="zavirac-monitoru" style="background:var(--lcars-red); border:none; color:#000; padding:5px 15px; border-radius:5px; cursor:pointer; font-weight:bold;">ZAVŘÍT</button>
         </div>
         <div id="monitor-content-area">
             </div>
@@ -757,6 +829,23 @@
 // Více admirál Jiřík's Starfleet Audio Engineering Protocol
 // Rozšířený o 5 nových sub-bass pásem
 
+// 🎛️ SDÍLENÉ EQ KONSTANTY - jediný zdroj pravdy pro live přehrávání i Ultra HD export,
+// aby se obě cesty nikdy nerozjely (dřív byly frekvence/Q duplikované na dvou místech)
+const EQ_FREQUENCIES = [10, 16, 20, 25, 31, 32, 64, 125, 250, 500, 1000, 2000, 4000];
+const EQ_SLIDER_IDS  = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+// 🔧 OPRAVA ZVUKU: Q faktory zvolené podle skutečné rozteče pásem.
+// Pásma 16-31 Hz leží velmi blízko sebe (0.3-0.7 oktávy), proto vyšší Q (užší zvon),
+// jinak by se navzájem úplně překrývaly. Pásma 32 Hz-4 kHz jsou rozteč přesně 1 oktáva,
+// Q=1.4 je standardní "constant-Q" hodnota pro osmipásmový oktávový grafický EQ.
+//
+// 🔊 DOLADĚNÍ SLYŠITELNOSTI: s Q=1.4-3.5 byl zvon u 10-31 Hz tak úzký (0.4-1 oktáva),
+// že reálně nezasahoval prakticky žádný skutečný hudební obsah (basová linka/kopák
+// leží typicky až kolem 40-80 Hz) - posuvník tedy zesiloval/zeslaboval téměř prázdné
+// spektrum a efekt byl neslyšitelný, i když filtr fungoval matematicky správně.
+// Snížením na Q=0.8 (~1.7 oktávy) každé z těch 5 pásem zasahuje o dost víc nahoru -
+// např. 31 Hz teď reálně ovlivňuje i pásmo cca 18-53 Hz, kde už skutečný obsah je.
+const EQ_Q_FACTORS = [0.8, 0.8, 0.8, 0.8, 0.8, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4];
+
 class AudioEditor {
     constructor() {
         this.audioBuffer = null;
@@ -765,9 +854,15 @@ class AudioEditor {
         this.effects = {};
         this.isPlaying = false;
         this.analyser = null;
+        this.fftAnalyser = null;
+        this.spectrumPeaks = null;
+        this.spectrumPeakVelocity = null;
         this.animationId = null;
         this.canvas = null;
         this.ctx = null;
+        this.canvasDpr = 1;
+        this.canvasCssWidth = 0;
+        this.canvasCssHeight = 200;
         
         // 🎚️ Level metering
         this.meter = null;
@@ -809,7 +904,7 @@ class AudioEditor {
         document.getElementById('download-button').addEventListener('click', () => this.downloadAudio());
         
         // 🎯 ROZŠÍŘENÉ EQ SLIDERS - 13 pásem
-        const eqSliders = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+        const eqSliders = EQ_SLIDER_IDS;
         eqSliders.forEach(freq => {
             const slider = document.getElementById(`eq-${freq}`);
             if (slider) {
@@ -864,7 +959,7 @@ class AudioEditor {
     
     // 🎯 EQ PRESET FUNKCE
     applyFlatPreset() {
-        const eqSliders = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+        const eqSliders = EQ_SLIDER_IDS;
         eqSliders.forEach(freq => {
             const slider = document.getElementById(`eq-${freq}`);
             if (slider) slider.value = 0;
@@ -872,8 +967,12 @@ class AudioEditor {
     }
     
     applyBassBoostPreset() {
+        // 🔧 DOLADĚNÍ: s Q=0.8 se těch 5 sub-bass pásem hodně překrývá. Původní hodnoty
+        // (6,6,8,8,6) vypadají v UI mírně, ale reálná kumulativní špička v místě překryvu
+        // (~20-24 Hz) vycházela na +29 dB - limiter to pak tvrdě ořezával a vznikalo dunění/pumpování
+        // místo čistého basu. Přepočteno (viz analyze_eq.py) na reálnou špičku ~9 dB.
         const settings = {
-            '10': 6, '16': 6, '20': 8, '25': 8, '31': 6,
+            '10': 2, '16': 2, '20': 2.7, '25': 2.7, '31': 2,
             '32': 4, '64': 4, '125': 2, '250': 0, '500': -1,
             '1k': 0, '2k': 0, '4k': 1
         };
@@ -881,8 +980,10 @@ class AudioEditor {
     }
     
     applySubBassFocusPreset() {
+        // 🔧 DOLADĚNÍ: stejný princip jako u Bass Boost - reálná špička dřív ~38 dB,
+        // přepočteno na cílenou (a pořád jasně znatelnou) ~15 dB.
         const settings = {
-            '10': 12, '16': 12, '20': 10, '25': 8, '31': 6,
+            '10': 4.9, '16': 4.9, '20': 4.1, '25': 3.3, '31': 2.4,
             '32': 4, '64': 2, '125': 0, '250': -2, '500': -3,
             '1k': -2, '2k': -1, '4k': 0
         };
@@ -890,8 +991,11 @@ class AudioEditor {
     }
     
     applyDeepImpactPreset() {
+        // 🔧 DOLADĚNÍ: nejagresivnější preset měl reálnou špičku přes +45 dB (limiter by to
+        // brutálně ořízl). Přepočteno na kontrolovanou, ale pořád dramatickou ~19 dB špičku -
+        // je to znát mnohem víc než Sub-Bass Focus, ale limiter to už zvládne bez rozpadu zvuku.
         const settings = {
-            '10': 15, '16': 15, '20': 12, '25': 10, '31': 8,
+            '10': 6.2, '16': 6.2, '20': 5, '25': 4.2, '31': 3.3,
             '32': 6, '64': 4, '125': 2, '250': -1, '500': -2,
             '1k': 0, '2k': 2, '4k': 3
         };
@@ -932,8 +1036,22 @@ class AudioEditor {
         this.canvas = document.getElementById('visualization');
         if (this.canvas) {
             this.ctx = this.canvas.getContext('2d');
-            this.canvas.width = this.canvas.offsetWidth;
-            this.canvas.height = 200;
+            
+            // 🖖 HiDPI/Retina scaling - ostrá grafika i na displejích s vyšším DPR
+            const dpr = window.devicePixelRatio || 1;
+            const cssWidth = this.canvas.offsetWidth || 800;
+            const cssHeight = 200;
+            
+            this.canvas.width = Math.round(cssWidth * dpr);
+            this.canvas.height = Math.round(cssHeight * dpr);
+            this.canvas.style.height = cssHeight + 'px';
+            
+            // Resetuje matici a nastaví scale, takže dál kreslíme v CSS pixelech
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            
+            this.canvasDpr = dpr;
+            this.canvasCssWidth = cssWidth;
+            this.canvasCssHeight = cssHeight;
         }
     }
     
@@ -1005,15 +1123,20 @@ class AudioEditor {
             this.player = new Tone.Player(this.audioBuffer);
             
             // 🎯 VYTVOŘENÍ 13-PÁSMOVÉHO EKVALIZÉRU
-            const frequencies = [10, 16, 20, 25, 31, 32, 64, 125, 250, 500, 1000, 2000, 4000];
-            this.equalizer = frequencies.map((freq, index) => {
-                const filter = new Tone.Filter({
+            // 🔧 OPRAVA ZVUKU: dřív bylo 5 sub-basových pásem (10-31 Hz) typu 'highpass'.
+            // U highpass/lowpass filtrů Web Audio API parametr `gain` VŮBEC nepoužívá
+            // (platí jen pro lowshelf/highshelf/peaking) - těch 5 posuvníků tedy reálně
+            // NEMĚLO ŽÁDNÝ SLYŠITELNÝ EFEKT na hlasitost daného pásma, ať se nastavily
+            // na jakoukoli hodnotu. Navíc presety jako "Bass Boost" slibovaly +15 dB boost,
+            // což highpass filtr fyzicky nikdy nemůže udělat (jen propouští nebo neprop.,
+            // nikdy nezesiluje). Teď je všech 13 pásem 'peaking' - gain funguje všude stejně.
+            this.equalizer = EQ_FREQUENCIES.map((freq, index) => {
+                return new Tone.Filter({
                     frequency: freq,
-                    type: freq <= 31 ? 'highpass' : 'peaking', // Sub-bass používá highpass
-                    Q: freq <= 31 ? 0.7 : 1, // Nižší Q pro sub-bass
+                    type: 'peaking',
+                    Q: EQ_Q_FACTORS[index],
                     gain: 0
                 });
-                return filter;
             });
             
             // Create effects
@@ -1022,7 +1145,12 @@ class AudioEditor {
                 delay: new Tone.FeedbackDelay({ wet: 0, feedback: 0.3, delayTime: "8n" }),
                 chorus: new Tone.Chorus({ wet: 0, frequency: 1.5, depth: 0.7, spread: 180 }),
                 distortion: new Tone.Distortion({ wet: 0, distortion: 0.4 }),
-                compressor: new Tone.Compressor({ threshold: -24, ratio: 3, attack: 0.03, release: 0.25 })
+                compressor: new Tone.Compressor({ threshold: -24, ratio: 3, attack: 0.03, release: 0.25 }),
+                // 🛡️ POJISTKA PROTI KLIPOVÁNÍ: teď, když EQ pásma opravdu zesilují (viz oprava výše),
+                // dá se snadno "přebudit" např. presetem Deep Impact (6 basových pásem naráz +6 až +15 dB).
+                // Compressor sám o sobě není tvrdý limiter (poměr 3:1 propustí špičky nad práh),
+                // takže na úplný konec řetězce patří ještě rychlý brick-wall limiter.
+                limiter: new Tone.Limiter(-1)
             };
             
             // Level meter
@@ -1043,17 +1171,29 @@ class AudioEditor {
                 this.effects.delay,
                 this.effects.chorus,
                 this.effects.distortion,
-                this.effects.compressor
+                this.effects.compressor,
+                this.effects.limiter
             ];
             
             Tone.connectSeries(...chain, Tone.Destination);
             
-            // Connect meter
-            this.effects.compressor.connect(this.meter);
+            // Connect meter a analyzéry AŽ ZA limiterem, ať ukazují skutečnou hlasitost
+            // toho, co jde do reproduktorů (ne úroveň před finálním ořezáním špiček)
+            this.effects.limiter.connect(this.meter);
             
             // Setup analyzer for visualization
-            this.analyser = new Tone.Analyser('waveform', 512);
-            this.effects.compressor.connect(this.analyser);
+            this.analyser = new Tone.Analyser('waveform', 1024);
+            this.analyser.smoothing = 0.6;
+            this.effects.limiter.connect(this.analyser);
+            
+            // 🌈 Skutečný FFT analyzátor pro frekvenční spektrum (ne náhražka z waveformu!)
+            this.fftAnalyser = new Tone.Analyser('fft', 256);
+            this.fftAnalyser.smoothing = 0.75;
+            this.effects.limiter.connect(this.fftAnalyser);
+            
+            const spectrumBarCount = 48;
+            this.spectrumPeaks = new Array(spectrumBarCount).fill(0);
+            this.spectrumPeakVelocity = new Array(spectrumBarCount).fill(0);
             
             this.updateAllEffects();
             
@@ -1066,25 +1206,13 @@ class AudioEditor {
     updateEqualizer() {
         if (!this.equalizer.length) return;
         
-        const eqSliders = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
-        eqSliders.forEach((freq, index) => {
+        // 🔧 OPRAVA ZVUKU: žádná výjimka pro sub-bass - všech 13 pásem je peaking filtr,
+        // takže posuvník vždy přímo ovládá gain (v dB) přesně tak, jak ukazuje UI popisek
+        EQ_SLIDER_IDS.forEach((freq, index) => {
             if (this.equalizer[index]) {
                 const slider = document.getElementById(`eq-${freq}`);
                 if (slider) {
-                    const value = parseFloat(slider.value);
-                    
-                    // Pro sub-bass (10-31 Hz) používáme jiný přístup
-                    if (index < 5) { // První 5 pásem (10, 16, 20, 25, 31 Hz)
-                        // Highpass filter pro sub-bass kontrolu
-                        if (value > 0) {
-                            this.equalizer[index].frequency.value = Math.max(10, 31 - value * 2);
-                        } else {
-                            this.equalizer[index].frequency.value = 31 + Math.abs(value);
-                        }
-                    } else {
-                        // Standardní peaking filtry pro zbytek
-                        this.equalizer[index].gain.value = value;
-                    }
+                    this.equalizer[index].gain.value = parseFloat(slider.value);
                 }
             }
         });
@@ -1164,7 +1292,7 @@ class AudioEditor {
     
     updateAllValueDisplays() {
         // 🎯 ROZŠÍŘENÉ EQ displays - 13 pásem
-        const eqSliders = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+        const eqSliders = EQ_SLIDER_IDS;
         eqSliders.forEach(freq => {
             const slider = document.getElementById(`eq-${freq}`);
             if (slider) {
@@ -1282,19 +1410,19 @@ class AudioEditor {
         const gradient = ctx.createLinearGradient(0, height - 10, 0, 10);
         
         if (normalizedLevel < 0.7) {
-            gradient.addColorStop(0, '#00ff00');
-            gradient.addColorStop(0.7, '#ffff00');
-            gradient.addColorStop(1, '#ffff00');
+            gradient.addColorStop(0, '#2ed573');
+            gradient.addColorStop(0.7, '#FFD34D');
+            gradient.addColorStop(1, '#FFD34D');
         } else if (normalizedLevel < 0.9) {
-            gradient.addColorStop(0, '#00ff00');
-            gradient.addColorStop(0.7, '#ffff00');
-            gradient.addColorStop(0.9, '#ff8800');
-            gradient.addColorStop(1, '#ff8800');
+            gradient.addColorStop(0, '#2ed573');
+            gradient.addColorStop(0.7, '#FFD34D');
+            gradient.addColorStop(0.9, '#ffa502');
+            gradient.addColorStop(1, '#ffa502');
         } else {
-            gradient.addColorStop(0, '#00ff00');
-            gradient.addColorStop(0.7, '#ffff00');
-            gradient.addColorStop(0.9, '#ff8800');
-            gradient.addColorStop(1, '#ff0000');
+            gradient.addColorStop(0, '#2ed573');
+            gradient.addColorStop(0.7, '#FFD34D');
+            gradient.addColorStop(0.9, '#ffa502');
+            gradient.addColorStop(1, '#ff4757');
         }
         
         ctx.fillStyle = gradient;
@@ -1332,13 +1460,13 @@ class AudioEditor {
             leftDisplay.textContent = leftDb.toFixed(1) + ' dB';
             
             if (leftDb > -6) {
-                leftDisplay.style.color = '#ff0000';
+                leftDisplay.style.color = '#ff4757';
             } else if (leftDb > -12) {
-                leftDisplay.style.color = '#ff8800';
+                leftDisplay.style.color = '#ffa502';
             } else if (leftDb > -24) {
-                leftDisplay.style.color = '#ffff00';
+                leftDisplay.style.color = '#FFD34D';
             } else {
-                leftDisplay.style.color = '#00ff00';
+                leftDisplay.style.color = '#2ed573';
             }
         }
         
@@ -1346,13 +1474,13 @@ class AudioEditor {
             rightDisplay.textContent = rightDb.toFixed(1) + ' dB';
             
             if (rightDb > -6) {
-                rightDisplay.style.color = '#ff0000';
+                rightDisplay.style.color = '#ff4757';
             } else if (rightDb > -12) {
-                rightDisplay.style.color = '#ff8800';
+                rightDisplay.style.color = '#ffa502';
             } else if (rightDb > -24) {
-                rightDisplay.style.color = '#ffff00';
+                rightDisplay.style.color = '#FFD34D';
             } else {
-                rightDisplay.style.color = '#00ff00';
+                rightDisplay.style.color = '#2ed573';
             }
         }
         
@@ -1361,15 +1489,15 @@ class AudioEditor {
             const maxDb = Math.max(leftDb, rightDb);
             if (maxDb > -3) {
                 peakIndicator.textContent = '🔴 PEAK!';
-                peakIndicator.style.color = '#ff0000';
+                peakIndicator.style.color = '#ff4757';
                 peakIndicator.style.animation = 'blink 0.5s infinite';
             } else if (maxDb > -6) {
                 peakIndicator.textContent = '🟡 HIGH';
-                peakIndicator.style.color = '#ff8800';
+                peakIndicator.style.color = '#ffa502';
                 peakIndicator.style.animation = 'none';
             } else {
                 peakIndicator.textContent = '🟢 OK';
-                peakIndicator.style.color = '#00ff00';
+                peakIndicator.style.color = '#2ed573';
                 peakIndicator.style.animation = 'none';
             }
         }
@@ -1377,7 +1505,7 @@ class AudioEditor {
     
     resetAllEffects() {
         // 🎯 RESET ROZŠÍŘENÉHO EQ - 13 pásem
-        const eqSliders = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
+        const eqSliders = EQ_SLIDER_IDS;
         eqSliders.forEach(freq => {
             const slider = document.getElementById(`eq-${freq}`);
             if (slider) slider.value = 0;
@@ -1409,25 +1537,96 @@ class AudioEditor {
     startVisualization() {
         if (!this.analyser || !this.canvas) return;
         
+        const peakGravity = 0.18; // zrychlení pádu peak-hold špiček (gravitační efekt)
+        
         const draw = () => {
             if (!this.isPlaying) return;
             
             this.animationId = requestAnimationFrame(draw);
             
-            const waveform = this.analyser.getValue();
-            const width = this.canvas.width;
-            const height = this.canvas.height;
+            const width = this.canvasCssWidth || this.canvas.offsetWidth;
+            const height = this.canvasCssHeight || 200;
             
             this.ctx.clearRect(0, 0, width, height);
             
-            // Draw waveform
+            // ═══ 1) SPEKTRÁLNÍ BARY - reálná FFT data, logaritmicky seskupená ═══
+            if (this.fftAnalyser && this.spectrumPeaks) {
+                const spectrum = this.fftAnalyser.getValue(); // dB, cca -100 až 0
+                const nyquistBins = spectrum.length;
+                const barCount = this.spectrumPeaks.length;
+                const gap = 2;
+                const barWidth = (width - gap * (barCount - 1)) / barCount;
+                const maxBarHeight = height * 0.85;
+                
+                for (let i = 0; i < barCount; i++) {
+                    // Kvadratické (ne lineární) rozložení binů - basy dostanou víc "místa",
+                    // věrněji odpovídá tomu, jak spektrum vnímá lidské ucho
+                    const t0 = Math.pow(i / barCount, 2);
+                    const t1 = Math.pow((i + 1) / barCount, 2);
+                    const idxStart = Math.floor(t0 * nyquistBins);
+                    const idxEnd = Math.max(idxStart + 1, Math.floor(t1 * nyquistBins));
+                    
+                    let maxDb = -100;
+                    for (let j = idxStart; j < idxEnd && j < nyquistBins; j++) {
+                        if (spectrum[j] > maxDb) maxDb = spectrum[j];
+                    }
+                    
+                    const norm = Math.min(1, Math.max(0, (maxDb + 100) / 100));
+                    const barHeight = norm * maxBarHeight;
+                    const x = i * (barWidth + gap);
+                    const y = height - barHeight;
+                    
+                    // Peak-hold špička s gravitačním pádem
+                    if (barHeight >= this.spectrumPeaks[i]) {
+                        this.spectrumPeaks[i] = barHeight;
+                        this.spectrumPeakVelocity[i] = 0;
+                    } else {
+                        this.spectrumPeakVelocity[i] += peakGravity;
+                        this.spectrumPeaks[i] = Math.max(0, this.spectrumPeaks[i] - this.spectrumPeakVelocity[i]);
+                    }
+                    
+                    // Barva podle frekvenčního pásma (LCARS spektrum: fialová → modrá → gold → oranžová),
+                    // navíc gradient podle hlasitosti (tmavší dole, plný tón nahoře, špička dosvítí do červena)
+                    const bandT = i / barCount;
+                    const bandLo = bandT < 0.25 ? '#5B4A73'
+                                 : bandT < 0.55 ? '#2F5978'
+                                 : bandT < 0.8  ? '#8A6F1E'
+                                 : '#8A4E10';
+                    const bandHi = bandT < 0.25 ? '#C297D8'
+                                 : bandT < 0.55 ? '#6FA8DC'
+                                 : bandT < 0.8  ? '#FFD34D'
+                                 : '#FF9F1C';
+                    const grad = this.ctx.createLinearGradient(0, height, 0, height - maxBarHeight);
+                    grad.addColorStop(0, bandLo);
+                    grad.addColorStop(0.55, bandHi);
+                    grad.addColorStop(0.9, bandHi);
+                    grad.addColorStop(1, '#ff4757');
+                    
+                    this.ctx.fillStyle = grad;
+                    this.ctx.fillRect(x, y, barWidth, barHeight);
+                    
+                    // Peak-hold čárka (bílá, pomalu padá)
+                    if (this.spectrumPeaks[i] > 1) {
+                        const peakY = height - this.spectrumPeaks[i];
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.fillRect(x, peakY - 2, barWidth, 2);
+                    }
+                }
+            }
+            
+            // ═══ 2) OSCILOSKOP - waveform se svitem, v horním pásmu plátna ═══
+            const waveform = this.analyser.getValue();
+            
+            this.ctx.save();
+            this.ctx.shadowColor = '#FFD34D';
+            this.ctx.shadowBlur = 8;
             this.ctx.beginPath();
-            this.ctx.strokeStyle = '#00ff00';
+            this.ctx.strokeStyle = '#FFD34D';
             this.ctx.lineWidth = 2;
             
             for (let i = 0; i < waveform.length; i++) {
                 const x = (i / waveform.length) * width;
-                const y = ((waveform[i] + 1) / 2) * height;
+                const y = ((waveform[i] + 1) / 2) * (height * 0.4) + height * 0.05;
                 
                 if (i === 0) {
                     this.ctx.moveTo(x, y);
@@ -1437,18 +1636,7 @@ class AudioEditor {
             }
             
             this.ctx.stroke();
-            
-            // Draw frequency bars
-            this.ctx.fillStyle = 'rgba(255, 107, 107, 0.6)';
-            const barWidth = width / waveform.length;
-            
-            for (let i = 0; i < waveform.length; i += 4) {
-                const barHeight = Math.abs(waveform[i]) * height;
-                const x = (i / waveform.length) * width;
-                const y = height - barHeight;
-                
-                this.ctx.fillRect(x, y, barWidth * 2, barHeight);
-            }
+            this.ctx.restore();
         };
         
         draw();
@@ -1461,8 +1649,13 @@ class AudioEditor {
         }
         
         if (this.ctx && this.canvas) {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            const width = this.canvasCssWidth || this.canvas.offsetWidth;
+            const height = this.canvasCssHeight || 200;
+            this.ctx.clearRect(0, 0, width, height);
         }
+        
+        if (this.spectrumPeaks) this.spectrumPeaks.fill(0);
+        if (this.spectrumPeakVelocity) this.spectrumPeakVelocity.fill(0);
     }
     
     // 🚀 ENHANCED DOWNLOAD FUNCTION - používá Quality Enhancer
@@ -1661,13 +1854,13 @@ class AudioEditor {
             progressBar.style.width = percentage + '%';
             
             if (percentage < 30) {
-                progressBar.style.backgroundColor = '#ffa500';
+                progressBar.style.backgroundColor = '#FF9F1C';
             } else if (percentage < 70) {
-                progressBar.style.backgroundColor = '#ffff00';
+                progressBar.style.backgroundColor = '#FFD34D';
             } else if (percentage < 100) {
-                progressBar.style.backgroundColor = '#90EE90';
+                progressBar.style.backgroundColor = '#8DE3A6';
             } else {
-                progressBar.style.backgroundColor = '#00ff00';
+                progressBar.style.backgroundColor = '#2ed573';
             }
         }
         
@@ -1712,7 +1905,7 @@ class AudioEditor {
                         <div id="progress-bar" style="
                             height: 100%;
                             width: 0%;
-                            background-color: #ffa500;
+                            background-color: #FF9F1C;
                             border-radius: 10px;
                             transition: width 0.3s ease, background-color 0.3s ease;
                         "></div>
@@ -1870,49 +2063,42 @@ class UltraHDAudioQualityEnhancer {
         const ultraCompressor = this.createMultiBandCompressor(context);
         chain.push(ultraCompressor[0]);
         
+        // 🛡️ POJISTKA PROTI KLIPOVÁNÍ - stejný důvod jako u živého přehrávání (viz setupAudioChain):
+        // opravené EQ pásma teď opravdu zesilují, takže export potřebuje finální limiter,
+        // jinak by stažený soubor mohl obsahovat ořezané (digitálně zkreslené) špičky.
+        chain.push(this.createOutputLimiter(context));
+        
         return chain;
     }
     
+    // 🛡️ Rychlý brick-wall limiter (nativní ekvivalent Tone.Limiter pro OfflineAudioContext)
+    createOutputLimiter(context) {
+        const limiter = context.createDynamicsCompressor();
+        limiter.threshold.value = -1;   // dB - stejná hodnota jako živý Tone.Limiter(-1)
+        limiter.knee.value = 0;         // ostrá hrana = chová se jako limiter, ne jako "měkký" kompresor
+        limiter.ratio.value = 20;       // maximální poměr, jaký Web Audio API dovoluje
+        limiter.attack.value = 0.003;   // velmi rychlý náběh, chytí i krátké špičky
+        limiter.release.value = 0.05;
+        return limiter;
+    }
+    
     // 🎯 13-PÁSMOVÝ ULTRA HD EKVALIZÉR
+    // 🔧 OPRAVA ZVUKU: stejná chyba jako v živém přehrávání (viz AudioEditor.setupAudioChain) -
+    // sub-bass pásma byla 'highpass' s bezúčinným gainem. Teď sdílí EQ_FREQUENCIES a EQ_Q_FACTORS
+    // s živým přehráváním, takže stažený/exportovaný soubor zní PŘESNĚ jako to, co slyšíš při
+    // úpravě posuvníků - dřív se live náhled a export lišily (obě cesty byly rozbité, ale nezávisle).
     create13BandUltraHDEqualizer(context) {
-        const frequencies = [10, 16, 20, 25, 31, 32, 64, 125, 250, 500, 1000, 2000, 4000];
-        const eqSliders = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
-        
-        const filters = frequencies.map((freq, index) => {
+        return EQ_FREQUENCIES.map((freq, index) => {
             const filter = context.createBiquadFilter();
+            filter.type = 'peaking';
+            filter.frequency.value = freq;
+            filter.Q.value = EQ_Q_FACTORS[index];
             
-            if (index < 5) { // Sub-bass pásma (10-31 Hz)
-                filter.type = 'highpass';
-                filter.Q.value = 0.7;
-                filter.frequency.value = freq;
-                
-                // Aplikace hodnot ze sliderů pro sub-bass
-                const sliderElement = document.getElementById(`eq-${eqSliders[index]}`);
-                if (sliderElement) {
-                    const sliderValue = parseFloat(sliderElement.value);
-                    if (sliderValue > 0) {
-                        filter.frequency.value = Math.max(freq * 0.5, freq - sliderValue * 2);
-                    } else {
-                        filter.frequency.value = freq + Math.abs(sliderValue);
-                    }
-                }
-            } else { // Standardní pásma (32 Hz+)
-                filter.type = 'peaking';
-                filter.frequency.value = freq;
-                filter.Q.value = 1.5;
-                
-                // Aplikace hodnot ze sliderů
-                const sliderElement = document.getElementById(`eq-${eqSliders[index]}`);
-                if (sliderElement) {
-                    const sliderValue = parseFloat(sliderElement.value);
-                    filter.gain.value = sliderValue;
-                }
-            }
+            const sliderElement = document.getElementById(`eq-${EQ_SLIDER_IDS[index]}`);
+            filter.gain.value = sliderElement ? parseFloat(sliderElement.value) : 0;
             
             return filter;
         });
-        
-        return filters;
     }
     
     // Zbytek metod zůstává stejný jako v původním kódu...
@@ -2549,7 +2735,7 @@ class UltraHDAudioQualityEnhancer {
                 
                 <div style="margin-top: 15px; text-align: center;">
                     <button id="ultra-hd-download" style="
-                        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+                        background: linear-gradient(45deg, #CC6666, #6FA8DC);
                         color: white;
                         border: none;
                         padding: 12px 24px;
@@ -2643,7 +2829,7 @@ class UltraHDAudioQualityEnhancer {
                     </div>
                     <div>
                         <strong>Predicted 13EQ Enhancement:</strong><br>
-                        📊 Score: ${predictedScore}/100 <span style="color: #4ecdc4;">(+${predictedScore - currentAnalysis.qualityScore})</span><br>
+                        📊 Score: ${predictedScore}/100 <span style="color: #6FA8DC;">(+${predictedScore - currentAnalysis.qualityScore})</span><br>
                         🎵 ${this.qualitySettings.sampleRate}Hz, ${this.qualitySettings.bitDepth}-bit<br>
                         📈 Enhanced processing<br>
                         🎛️ EQ: 13-Band (10Hz-4kHz)
@@ -2690,7 +2876,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // 📱 HANDLING RESPONSIVE CANVAS
 window.addEventListener('resize', () => {
     if (window.audioEditor && window.audioEditor.canvas) {
-        window.audioEditor.canvas.width = window.audioEditor.canvas.offsetWidth;
         window.audioEditor.setupCanvas();
     }
     
@@ -2724,14 +2909,14 @@ document.getElementById('otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru
     externalMonitorWindow.document.write(`
         <html><head><title>🛰️ EXTERNAL MONITOR - STARFLEET HYBRID</title>
         <style>
-            body { background: #0f0f0f; color: #4ecdc4; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; overflow-x: hidden; }
-            .card { background: rgba(255,255,255,0.05); border: 1px solid #4ecdc4; border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-            h3 { color: #ff6b6b; text-transform: uppercase; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 1em; }
+            body { background: #000000; color: #6FA8DC; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; overflow-x: hidden; }
+            .card { background: rgba(255,255,255,0.05); border: 1px solid #6FA8DC; border-radius: 10px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+            h3 { color: #CC6666; text-transform: uppercase; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 5px; font-size: 1em; }
             
             /* EQ TABULKA */
             table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: 0.9em; }
             td { border-bottom: 1px solid #222; padding: 4px; }
-            .val-cell { text-align: right; color: #4ecdc4; font-weight: bold; }
+            .val-cell { text-align: right; color: #6FA8DC; font-weight: bold; }
 
             /* HORIZONTÁLNÍ VU METRY */
             .vu-container { margin: 15px 0; }
@@ -2743,12 +2928,12 @@ document.getElementById('otevirac-moldar-okna-pro-monitor-pokrocileho-eqvarizeru
 
             /* STATUS PRVKY */
             .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em; }
-            .status-item { background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; border-left: 3px solid #4ecdc4; }
+            .status-item { background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; border-left: 3px solid #6FA8DC; }
             .live-val { color: #fff; font-weight: bold; }
             
             .monitor-footer { margin-top: 10px; padding: 10px; border-radius: 5px; font-size: 0.75em; font-weight: bold; display: flex; justify-content: space-between; border: 1px solid #333; }
             .active-max { background: rgba(46, 213, 115, 0.1); border-color: #2ed573; color: #2ed573; }
-            .active-narrow { background: rgba(255, 159, 67, 0.1); border-color: #ff9f43; color: #ff9f43; }
+            .active-narrow { background: rgba(255, 159, 28, 0.1); border-color: #FF9F1C; color: #FF9F1C; }
         </style></head><body>
         
         <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:20px;">
@@ -2852,17 +3037,17 @@ window.updateStarfleetDashboard = () => {
     if (monitorOverlay && monitorOverlay.style.display !== 'none') {
         const frequencies = ['10', '16', '20', '25', '31', '32', '64', '125', '250', '500', '1k', '2k', '4k'];
         const eqRows = frequencies.map(f => `
-            <tr><td>${f} Hz</td><td style="text-align:right; color:#4ecdc4;">${document.getElementById(`eq-${f}`)?.value} dB</td></tr>
+            <tr><td>${f} Hz</td><td style="text-align:right; color:#6FA8DC;">${document.getElementById(`eq-${f}`)?.value} dB</td></tr>
         `).join('');
 
         monitorContent.innerHTML = `
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div class="card" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border:1px solid #4ecdc4;">
-                    <h3 style="color:#ff6b6b; margin-top:0;">🎚️ 13-PÁSMOVÝ EQ</h3>
+                <div class="card" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border:1px solid #6FA8DC;">
+                    <h3 style="color:#CC6666; margin-top:0;">🎚️ 13-PÁSMOVÝ EQ</h3>
                     <table style="width:100%; font-family:monospace;">${eqRows}</table>
                 </div>
-                <div class="card" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border:1px solid #4ecdc4;">
-                    <h3 style="color:#ff6b6b; margin-top:0;">🎛️ STATUS MŮSTKU</h3>
+                <div class="card" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; border:1px solid #6FA8DC;">
+                    <h3 style="color:#CC6666; margin-top:0;">🎛️ STATUS MŮSTKU</h3>
                     <p>🔊 VOL: ${(document.getElementById('volume')?.value * 100).toFixed(0)}%</p>
                     <p>🏛️ REV: ${(document.getElementById('reverb')?.value * 100).toFixed(0)}%</p>
                     <p>💎 SR: ${document.getElementById('target-sample-rate')?.value} Hz</p>
@@ -2986,13 +3171,13 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
         console.log(`✅ Canvas vytvořen (${currentQuality}):`, pipCanvas.width, 'x', pipCanvas.height, '@', quality.fps, 'FPS');
         
         // TEST RENDERING
-        ctx.fillStyle = '#1a1a2e';
+        ctx.fillStyle = '#0b0b0f';
         ctx.fillRect(0, 0, quality.width, quality.height);
-        ctx.fillStyle = '#ff6b6b';
+        ctx.fillStyle = '#CC6666';
         ctx.font = `bold ${Math.floor(quality.height * 0.07)}px Arial`;
         ctx.textAlign = 'center';
         ctx.fillText('🛸 USS PROMETHEUS', quality.width / 2, quality.height / 2);
-        ctx.fillStyle = '#4ecdc4';
+        ctx.fillStyle = '#6FA8DC';
         ctx.font = `${Math.floor(quality.height * 0.04)}px Arial`;
         ctx.fillText(`Inicializace PiP... (${currentQuality} @ ${quality.fps} FPS)`, quality.width / 2, quality.height / 2 + 50);
         
@@ -3059,20 +3244,20 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             
             // POZADÍ
             const gradient = ctx.createLinearGradient(0, 0, 0, h);
-            gradient.addColorStop(0, '#0a0a0a');
-            gradient.addColorStop(1, '#1a1a2e');
+            gradient.addColorStop(0, '#000000');
+            gradient.addColorStop(1, '#0b0b0f');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, w, h);
             
             // HEADER
             const headerH = Math.floor(h * 0.097);
-            ctx.fillStyle = 'rgba(255, 107, 107, 0.2)';
+            ctx.fillStyle = 'rgba(204, 102, 102, 0.2)';
             ctx.fillRect(0, 0, w, headerH);
-            ctx.strokeStyle = '#ff6b6b';
+            ctx.strokeStyle = '#CC6666';
             ctx.lineWidth = Math.max(2, scale * 3);
             ctx.strokeRect(0, 0, w, headerH);
             
-            ctx.fillStyle = '#ff6b6b';
+            ctx.fillStyle = '#CC6666';
             ctx.font = `bold ${Math.floor(scale * 28)}px Arial`;
             ctx.textAlign = 'center';
             ctx.fillText(`🛸 USS PROMETHEUS (${currentQuality})`, w / 2, headerH * 0.64);
@@ -3088,7 +3273,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             ctx.lineWidth = Math.max(1, scale * 2);
             ctx.strokeRect(Math.floor(w * 0.023), yOffset, eqW, eqH);
             
-            ctx.fillStyle = '#ff9f43';
+            ctx.fillStyle = '#FF9F1C';
             ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'left';
             ctx.fillText('🎚️ 13-PÁSMOVÝ EQ', Math.floor(w * 0.035), yOffset + Math.floor(scale * 35));
@@ -3104,7 +3289,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
                 ctx.textAlign = 'left';
                 ctx.fillText(f + ' Hz', Math.floor(w * 0.035), eqY);
                 
-                ctx.fillStyle = '#4ecdc4';
+                ctx.fillStyle = '#6FA8DC';
                 ctx.textAlign = 'right';
                 ctx.fillText(val + ' dB', Math.floor(w * 0.449), eqY);
                 
@@ -3127,7 +3312,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             ctx.strokeStyle = '#333';
             ctx.strokeRect(rightX, yOffset, rightW, effectH);
             
-            ctx.fillStyle = '#ff9f43';
+            ctx.fillStyle = '#FF9F1C';
             ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'left';
             ctx.fillText('🎛️ EFEKTY', rightX + Math.floor(scale * 15), yOffset + Math.floor(scale * 35));
@@ -3154,7 +3339,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
                 
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
                 ctx.fillRect(xPos, statusY, boxW, boxH);
-                ctx.fillStyle = '#4ecdc4';
+                ctx.fillStyle = '#6FA8DC';
                 ctx.fillRect(xPos, statusY, 4, boxH);
                 
                 ctx.fillStyle = '#888';
@@ -3162,7 +3347,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
                 ctx.textAlign = 'left';
                 ctx.fillText(item.label, xPos + 15, statusY + Math.floor(boxH * 0.45));
                 
-                ctx.fillStyle = '#4ecdc4';
+                ctx.fillStyle = '#6FA8DC';
                 ctx.font = `bold ${Math.floor(scale * 18)}px Arial`;
                 ctx.textAlign = 'right';
                 ctx.fillText(item.value, xPos + boxW - 15, statusY + Math.floor(boxH * 0.82));
@@ -3183,7 +3368,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             ctx.strokeStyle = '#333';
             ctx.strokeRect(rightX, vuY, rightW, vuH);
             
-            ctx.fillStyle = '#ff9f43';
+            ctx.fillStyle = '#FF9F1C';
             ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'left';
             ctx.fillText('📶 METERING', rightX + Math.floor(scale * 15), vuY + Math.floor(scale * 35));
@@ -3202,7 +3387,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             ctx.font = `bold ${Math.floor(scale * 16)}px Arial`;
             ctx.textAlign = 'left';
             ctx.fillText('L', rightX + Math.floor(scale * 15), meterY);
-            ctx.fillStyle = '#4ecdc4';
+            ctx.fillStyle = '#6FA8DC';
             ctx.textAlign = 'right';
             ctx.fillText(lDb.toFixed(1) + ' dB', rightX + rightW - Math.floor(scale * 15), meterY);
             
@@ -3228,7 +3413,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             ctx.font = `bold ${Math.floor(scale * 16)}px Arial`;
             ctx.textAlign = 'left';
             ctx.fillText('R', rightX + Math.floor(scale * 15), meterY2);
-            ctx.fillStyle = '#4ecdc4';
+            ctx.fillStyle = '#6FA8DC';
             ctx.textAlign = 'right';
             ctx.fillText(rDb.toFixed(1) + ' dB', rightX + rightW - Math.floor(scale * 15), meterY2);
             
@@ -3253,7 +3438,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(rightX + Math.floor(scale * 15), peakY, meterW, Math.floor(scale * 50));
-            ctx.fillStyle = '#4ecdc4';
+            ctx.fillStyle = '#6FA8DC';
             ctx.fillRect(rightX + Math.floor(scale * 15), peakY, 4, Math.floor(scale * 50));
             
             ctx.fillStyle = '#888';
@@ -3261,7 +3446,7 @@ document.getElementById('otevirani-pip-up-plovouciho-okna').onclick = async () =
             ctx.textAlign = 'left';
             ctx.fillText('⚠️ PEAK', rightX + Math.floor(scale * 25), peakY + Math.floor(scale * 20));
             
-            ctx.fillStyle = '#4ecdc4';
+            ctx.fillStyle = '#6FA8DC';
             ctx.font = `bold ${Math.floor(scale * 20)}px Arial`;
             ctx.textAlign = 'right';
             ctx.fillText(peakVal, rightX + meterW, peakY + Math.floor(scale * 35));
@@ -3312,7 +3497,7 @@ function showQualitySelector() {
         top: 20px;
         right: 20px;
         background: rgba(26, 26, 46, 0.95);
-        border: 2px solid #4ecdc4;
+        border: 2px solid #6FA8DC;
         border-radius: 8px;
         padding: 15px;
         z-index: 999998;
@@ -3323,10 +3508,10 @@ function showQualitySelector() {
     
     selector.innerHTML = `
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-            <span style="font-weight: bold; color: #ff6b6b;">⚙️ KVALITA PiP</span>
-            <button onclick="document.getElementById('pip-quality-selector').remove()" style="background: #ff6b6b; border: none; color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">×</button>
+            <span style="font-weight: bold; color: #CC6666;">⚙️ KVALITA PiP</span>
+            <button onclick="document.getElementById('pip-quality-selector').remove()" style="background: #CC6666; border: none; color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">×</button>
         </div>
-        <select id="pip-quality-select" style="width: 100%; padding: 8px; background: #0f3460; color: #fff; border: 1px solid #4ecdc4; border-radius: 4px; cursor: pointer; font-size: 14px;">
+        <select id="pip-quality-select" style="width: 100%; padding: 8px; background: #111318; color: #fff; border: 1px solid #6FA8DC; border-radius: 4px; cursor: pointer; font-size: 14px;">
             ${Object.keys(QUALITY_PRESETS).map(key => 
                 `<option value="${key}" ${key === currentQuality ? 'selected' : ''}>${QUALITY_PRESETS[key].label}</option>`
             ).join('')}
